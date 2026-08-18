@@ -37,7 +37,6 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
   height:100%;overscroll-behavior-y:none;}
 body{display:flex;flex-direction:column;height:100dvh;}
 
-/* ---------- header ---------- */
 header{
   background:linear-gradient(135deg,var(--accent-dark),var(--accent));
   color:#fff;padding:calc(10px + var(--safe-top)) 16px 12px;
@@ -49,10 +48,8 @@ header .btn-icon{background:rgba(255,255,255,.18);border:none;color:#fff;border-
   width:36px;height:36px;font-size:18px;display:flex;align-items:center;justify-content:center;}
 header .hdr-right{display:flex;gap:8px;}
 
-/* ---------- main ---------- */
 main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px calc(90px + var(--safe-bottom));}
 
-/* ---------- bottom nav ---------- */
 nav.bottomnav{
   position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);
   display:flex;padding-bottom:var(--safe-bottom);z-index:20;
@@ -62,32 +59,34 @@ nav.bottomnav button{flex:1;border:none;background:none;padding:10px 4px 8px;dis
 nav.bottomnav button.active{color:var(--accent);font-weight:700;}
 nav.bottomnav .ic{font-size:20px;}
 
-/* ---------- FAB ---------- */
 .fab{position:fixed;right:18px;bottom:calc(78px + var(--safe-bottom));width:56px;height:56px;border-radius:50%;
   background:var(--accent);color:#fff;border:none;font-size:28px;box-shadow:0 6px 16px rgba(46,134,171,.45);
   display:flex;align-items:center;justify-content:center;z-index:15;}
 
-/* ---------- search ---------- */
 .searchbar{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;
   display:flex;align-items:center;gap:8px;margin-bottom:12px;}
 .searchbar input{border:none;outline:none;flex:1;font-size:15px;background:transparent;color:var(--text);}
 
-/* ---------- cards (list view) ---------- */
 .house-card{background:var(--card);border-radius:var(--radius);padding:14px;margin-bottom:12px;
-  box-shadow:0 1px 3px rgba(0,0,0,.06);border-left:5px solid var(--accent);}
+  box-shadow:0 1px 3px rgba(0,0,0,.06);border-left:5px solid var(--accent);position:relative;}
 .house-card .tag-line{font-weight:700;font-size:15px;color:var(--accent-dark);margin-bottom:4px;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:5px;}
 .house-card .addr{font-size:12.5px;color:var(--sub);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .house-card .meta-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
 .pill{font-size:11.5px;padding:3px 9px;border-radius:20px;background:#EEF3F5;color:var(--accent-dark);white-space:nowrap;}
-.pill.score{background:#FFF3DC;color:#8A6416;font-weight:700;}
 .pill.status{background:#E7F3EC;color:var(--green);}
 .pill.flag{background:#FBEAEA;color:var(--red);}
 .pill.decision{font-weight:700;}
 .empty-state{text-align:center;color:var(--sub);padding:60px 20px;font-size:14px;line-height:1.8;}
 .empty-state .big{font-size:40px;margin-bottom:8px;}
 
-/* ---------- edit view ---------- */
+.score-badge{font-weight:800;border-radius:20px;padding:3px 10px;font-size:12px;white-space:nowrap;}
+.score-badge.good{background:#E7F3EC;color:var(--green);}
+.score-badge.mid{background:#FFF3DC;color:#8A6416;}
+.score-badge.bad{background:#FBEAEA;color:var(--red);}
+.score-badge.none{background:#EEF3F5;color:var(--sub);}
+.medal{font-size:15px;}
+
 .edit-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
 .edit-header button.back{background:none;border:none;font-size:20px;color:var(--accent-dark);padding:4px 8px 4px 0;}
 .edit-header .id-input{flex:1;border:none;background:transparent;font-size:17px;font-weight:700;color:var(--accent-dark);outline:none;
@@ -108,13 +107,13 @@ details.section summary .chev{transition:transform .2s;color:var(--sub);font-siz
 details.section[open] summary .chev{transform:rotate(90deg);}
 details.section .section-body{padding:4px 14px 14px;border-top:1px solid var(--line);}
 
-.field{margin-top:12px;}
+.field{margin-top:14px;}
 .field label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:5px;font-weight:600;}
 .field input[type=text],.field input[type=number],.field input[type=date],.field input[type=time],
-.field input[type=tel],.field textarea{
+.field input[type=tel],.field textarea,.field select{
   width:100%;border:1px solid var(--line);background:var(--input-fill);border-radius:10px;
   padding:9px 11px;font-size:14.5px;color:var(--text);font-family:inherit;outline:none;}
-.field textarea{min-height:60px;resize:vertical;}
+.field textarea{min-height:54px;resize:vertical;}
 .field .unit-wrap{position:relative;}
 .field .unit-wrap span{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--sub);font-size:13px;}
 
@@ -122,6 +121,7 @@ details.section .section-body{padding:4px 14px 14px;border-top:1px solid var(--l
 .chip{padding:7px 13px;border-radius:20px;border:1px solid var(--line);background:#fff;font-size:13px;color:var(--text);}
 .chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
 .chip.on.multi{background:var(--accent-dark);border-color:var(--accent-dark);}
+.chip.dashed{background:none;border:1px dashed #C6CFD3;color:var(--sub);}
 
 .stars{display:flex;gap:4px;}
 .stars .star{font-size:26px;color:#DADFE2;line-height:1;}
@@ -134,19 +134,49 @@ details.section .section-body{padding:4px 14px 14px;border-top:1px solid var(--l
 .checklist-item.on .box{background:var(--accent);border-color:var(--accent);}
 .checklist-item.flagitem.on .box{background:var(--red);border-color:var(--red);}
 
+.stepper{display:flex;align-items:center;gap:12px;}
+.stepper button{width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:#fff;font-size:18px;color:var(--accent-dark);font-weight:700;}
+.stepper button:active{background:#EEF3F5;}
+.stepper .val{min-width:56px;text-align:center;font-weight:800;font-size:15px;color:var(--text);}
+
+.tags-counter{font-size:11px;color:var(--sub);margin-top:6px;}
+.tags-custom-wrap{margin-top:9px;display:none;gap:6px;}
+.tags-custom-wrap.show{display:flex;}
+.tags-custom-wrap input{flex:1;border:1px solid var(--line);background:var(--input-fill);border-radius:10px;padding:8px 10px;font-size:13.5px;font-family:inherit;}
+.tags-custom-wrap button{border:none;background:var(--accent);color:#fff;border-radius:10px;padding:0 14px;font-size:13px;}
+
+.other-wrap{margin-top:9px;display:none;}
+.other-wrap.show{display:block;}
+.other-wrap input{width:100%;border:1px solid var(--line);background:var(--input-fill);border-radius:10px;padding:8px 10px;font-size:13.5px;font-family:inherit;}
+
+.note-toggle{margin-top:8px;background:none;border:none;padding:0;font-size:12px;color:var(--accent);font-weight:600;}
+.note-wrap{margin-top:8px;display:none;}
+.note-wrap.show{display:block;}
+.note-wrap input{width:100%;border:1px solid var(--line);background:var(--input-fill);border-radius:10px;padding:8px 10px;font-size:13.5px;font-family:inherit;}
+
+.top-badge{margin-top:4px;font-size:11.5px;color:var(--accent);font-weight:700;}
+
 /* ---------- compare view ---------- */
 .compare-controls{display:flex;gap:8px;margin-bottom:12px;}
 .compare-controls select{flex:1;border:1px solid var(--line);border-radius:10px;padding:8px;font-size:13px;
   background:#fff;color:var(--text);font-family:inherit;}
 .compare-row{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:9px;box-shadow:0 1px 3px rgba(0,0,0,.05);
   display:flex;align-items:center;gap:12px;}
-.compare-row .rank{font-size:17px;font-weight:800;color:var(--accent);width:26px;text-align:center;flex-shrink:0;}
+.compare-row .rank{font-size:16px;font-weight:800;color:var(--accent);width:26px;text-align:center;flex-shrink:0;}
 .compare-row .info{flex:1;min-width:0;}
 .compare-row .info .t1{font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .compare-row .info .t2{font-size:12px;color:var(--sub);margin-top:2px;}
-.compare-row .score{text-align:center;flex-shrink:0;}
-.compare-row .score .n{font-size:18px;font-weight:800;color:#8A6416;}
-.compare-row .score .u{font-size:10px;color:var(--sub);}
+
+.top-pick-card{background:linear-gradient(135deg,#FFF7E0,#FFF3DC);border:1px solid #F0DBA0;border-radius:14px;padding:14px;margin-bottom:16px;}
+.top-pick-card h3{margin:0 0 10px;font-size:13.5px;color:#8A6416;}
+.top-pick-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed #EADFB8;}
+.top-pick-row:last-child{border-bottom:none;}
+.top-pick-row .medal{font-size:20px;width:26px;text-align:center;flex-shrink:0;}
+.top-pick-row .info{flex:1;min-width:0;}
+.top-pick-row .info .t1{font-weight:700;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.top-pick-row .tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px;}
+.top-pick-row .tags span{font-size:10.5px;background:rgba(138,100,22,.12);color:#8A6416;padding:2px 7px;border-radius:20px;}
+.top-pick-row .n{font-weight:800;font-size:16px;color:#8A6416;flex-shrink:0;}
 
 /* ---------- modal ---------- */
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:50;display:flex;align-items:flex-end;}
@@ -164,6 +194,7 @@ details.section .section-body{padding:4px 14px 14px;border-top:1px solid var(--l
   opacity:0;transition:opacity .25s;pointer-events:none;}
 .toast.show{opacity:1;}
 .save-banner{background:#FFF3DC;color:#8A6416;font-size:11.5px;text-align:center;padding:6px;border-radius:8px;margin-bottom:10px;}
+.score-explain{font-size:11px;color:var(--sub);text-align:center;margin:-8px 0 14px;}
 </style>
 </head>
 <body>
@@ -181,16 +212,33 @@ details.section .section-body{padding:4px 14px 14px;border-top:1px solid var(--l
 
 <nav class="bottomnav">
   <button data-view="list" class="navbtn"><span class="ic">🏘️</span><span>列表</span></button>
-  <button data-view="compare" class="navbtn"><span class="ic">📊</span><span>比較</span></button>
+  <button data-view="compare" class="navbtn"><span class="ic">🏆</span><span>排行比較</span></button>
   <button data-view="help" class="navbtn"><span class="ic">❓</span><span>怎麼問</span></button>
 </nav>
 
 <input type="file" id="fileImport" accept="application/json" style="display:none">
 <div id="toast" class="toast"></div>
 
+<datalist id="mrtStations">
+<!-- 常見捷運站，僅供輸入建議，仍可自行輸入任何站名 -->
+<option value="台北車站"><option value="中山"><option value="民權西路"><option value="雙連">
+<option value="大安"><option value="大安森林公園"><option value="信義安和"><option value="市政府">
+<option value="國父紀念館"><option value="忠孝復興"><option value="忠孝敦化"><option value="忠孝新生">
+<option value="西門"><option value="龍山寺"><option value="古亭"><option value="公館">
+<option value="台電大樓"><option value="景美"><option value="萬隆"><option value="新店">
+<option value="永和"><option value="頂溪"><option value="永安市場"><option value="中和">
+<option value="景安"><option value="南勢角"><option value="板橋"><option value="府中">
+<option value="新埔"><option value="江子翠"><option value="西門町"><option value="東門">
+<option value="中正紀念堂"><option value="小南門"><option value="劍潭"><option value="士林">
+<option value="芝山"><option value="石牌"><option value="北投"><option value="淡水">
+<option value="松江南京"><option value="南京復興"><option value="行天宮"><option value="中山國小">
+<option value="圓山"><option value="民生社區"><option value="內湖"><option value="南港">
+<option value="南港軟體園區"><option value="昆陽"><option value="後山埤">
+</datalist>
+
 <script>
 /* =========================================================
-   SCHEMA
+   SCHEMA HELPERS
 ========================================================= */
 const T=(key,label,ph,extra)=>({type:'text',key,label,placeholder:ph,...(extra||{})});
 const N=(key,label,unit)=>({type:'number',key,label,unit});
@@ -202,132 +250,124 @@ const M=(key,label,opts)=>({type:'multiselect',key,label,options:opts});
 const S=(key,label)=>({type:'star',key,label});
 const TA=(key,label)=>({type:'textarea',key,label});
 const CL=(key,label,items,flag)=>({type:'checklist',key,label,items,flag:!!flag});
+const ST=(key,label,min,max,step,unit)=>({type:'stepper',key,label,min,max,step,unit});
+const TG=(key,label,options,max)=>({type:'tags',key,label,options,max:max||99,allowCustom:true});
+const SEL=(key,label,options)=>({type:'select',key,label,options});
+const CN=(key,label,options)=>({type:'choicenote',key,label,options});
 
+const DISTRICTS=['中正區','大同區','中山區','松山區','大安區','萬華區','信義區','士林區','北投區','內湖區','南港區','文山區',
+  '板橋區','三重區','中和區','永和區','新莊區','新店區','土城區','蘆洲區','樹林區','汐止區','三峽區','淡水區','五股區','泰山區','林口區','其他'];
+
+/* =========================================================
+   SCHEMA
+========================================================= */
 const SECTIONS=[
 {id:'s1',title:'① 基本資料',fields:[
   T('nickname','物件暱稱','例：頂溪25K三房'),
   D('viewDate','看房日期'), TM('viewTime','看房時間'),
   C('platform','刊登平台',['591','樂屋','好房','FB','仲介','其他']),
-  T('url','物件網址'),
+  T('url','物件網址','貼上連結（選填）'),
   T('address','完整地址'),
-  T('district','行政區'),
-  T('mrt','最近捷運站'),
-  T('mrtDist','距捷運站','約＿＿公尺／步行＿＿分鐘'),
-  T('toSchool','到台科大','約＿＿分鐘'),
-  T('bus','附近公車'),
+  SEL('district','行政區',DISTRICTS),
+  T('mrt','最近捷運站','輸入或從建議選擇',{list:'mrtStations'}),
+  C('mrtDist','距捷運站',['5分鐘內','5-10分鐘','10-15分鐘','15分鐘以上']),
+  C('commuteTime','通勤時間（到常去地點）',['10分鐘內','10-20分鐘','20-30分鐘','30分鐘以上']),
+  C('busAccess','附近公車',['很方便','需走一段路','不清楚']),
   C('parking','附近機車停車',['好找','普通','困難']),
-  M('amenities','附近生活機能',['市場','超商','超市','醫院','餐飲']),
+  M('amenities','附近生活機能',['市場','超商','超市','醫院','餐飲','公園']),
 ]},
 {id:'s2',title:'② 租金與所有費用',fields:[
   N('rent','月租','$'), N('mgmtFee','管理費','$'),
-  T('deposit','押金','例：2個月／$60000'),
+  ST('depositMonths','押金（月數）',0,3,0.5,'個月'),
   C('agentFee','仲介費',['無','半個月','一個月','其他']),
-  T('oneTimeFee','其他一次性費用'),
   C('water','水費',['台水帳單','含租','每人固定','每度計費','其他']),
   C('electric','電費',['台電帳單','台電分攤','每度計費','夏季另計','其他']),
   C('gasHave','天然瓦斯',['有','無']),
-  C('gasFee','瓦斯費',['台灣天然氣帳單','桶裝瓦斯','其他']),
-  C('internet','網路',['含租','自理','每月計費']),
-  T('parkingFee','停車費','機車＿＿元／汽車＿＿元'),
-  C('trashFee','垃圾處理費',['含管理費','另收費','自行追垃圾車']),
-  T('otherFee','其他費用'),
+  C('gasFee','瓦斯費',['台灣天然氣帳單','桶裝瓦斯','無需額外付費','其他']),
+  C('internet','網路',['含租','自理','每月固定收費']),
+  N('parkingFeeScooter','機車停車費','$'), N('parkingFeeCar','汽車停車費','$'),
+  C('trashFee','垃圾處理費',['含管理費','另外收費','自行追垃圾車']),
+  T('otherFee','其他費用（選填）'),
 ]},
 {id:'s3',title:'③ 房屋本身',fields:[
-  T('layout','格局','＿房＿廳＿衛＿陽台'),
+  ST('rooms','房',0,6,1,'房'), ST('livingRooms','廳',0,4,1,'廳'),
+  ST('bathrooms','衛',0,4,1,'衛'), ST('balconyCount','陽台',0,3,1,'個'),
   N('ping','坪數'), N('pingUsable','實際可使用坪數'),
   C('buildingType','建物類型',['電梯大樓','華廈','公寓','套房','其他']),
-  T('floor','樓層','例：3F／8F'),
-  C('isTop','是否頂樓',['是','否']),
-  C('isTopAdd','是否頂樓加蓋',['是','否']),
+  ST('floorAt','所在樓層',0,30,1,'樓'), ST('floorTotal','共幾層',1,40,1,'樓'),
+  C('isTopAdd','頂樓加蓋',['是','否','不適用']),
   C('elevator','電梯',['有','無']),
-  N('age','屋齡（年）'),
+  C('ageRange','屋齡',['5年內','5-10年','10-20年','20-30年','30年以上','不確定']),
   C('exterior','建物外觀',['新','普通','老舊']),
   S('scorePublicClean','公共區域整潔'),
-  C('escape','逃生梯',['有','無']),
-  C('fireSafety','消防設備',['正常','需確認']),
-  C('smokeDetector','煙霧偵測器',['有','無']),
-  C('extinguisher','滅火器',['有','無']),
+  M('safetyEquip','安全設備（可複選）',['逃生梯','煙霧偵測器','滅火器']),
+  C('fireSafety','消防設備狀況',['正常','需確認']),
 ]},
 {id:'s4',title:'④ 採光、通風與居住體感',fields:[
   S('scoreLivingLight','客廳採光'), S('scoreMasterLight','主臥採光'),
   S('scoreSecondLight','次臥採光'), S('scoreVentilation','通風'),
-  C('winLiving','客廳對外窗',['有','無']), C('winMaster','主臥對外窗',['有','無']),
-  C('winSecond','次臥對外窗',['有','無']), C('winBath','浴室對外窗',['有','無']),
-  C('winKitchen','廚房對外窗',['有','無']),
+  M('windowsIn','有對外窗的空間（可複選）',['客廳','主臥','次臥','浴室','廚房']),
   C('westSun','西曬',['有','無']),
-  C('topHeat','頂樓炎熱疑慮',['有','無']),
+  C('topHeat','頂樓炎熱疑慮',['有','無','不適用']),
   C('damp','室內潮濕感',['無','輕微','明顯']),
-  C('moldSmell','霉味',['無','有']), C('smokeSmell','煙味',['無','有']),
-  C('petSmell','寵物味',['無','有']), C('drainSmell','排水溝味',['無','有']),
-  T('otherSmell','其他異味'),
+  M('smells','聞到的異味（可複選，沒有請不選）',['霉味','煙味','寵物味','排水溝味','其他']),
 ]},
 {id:'s5',title:'⑤ 噪音與環境',fields:[
   S('scoreSoundproof','關窗後隔音'), S('scoreOpenNoise','開窗噪音'),
-  C('trafficNoise','車流聲',['有','無']), C('mrtNoise','捷運聲',['有','無']),
-  C('planeNoise','飛機聲',['有','無']), C('neighborNoise','鄰居聲音',['有','無']),
-  C('upstairsNoise','樓上腳步聲',['有','無']), C('pipeNoise','水管聲',['有','無']),
-  C('elevatorNoise','電梯聲',['有','無']), C('templeNoise','宮廟／學校／市場聲音',['有','無']),
+  M('noisesHeard','現場聽到的聲音（可複選）',['車流聲','捷運聲','飛機聲','鄰居聲音','樓上腳步聲','水管聲','電梯聲','宮廟／學校／市場聲音']),
   C('nightNoise','晚上可能吵嗎',['低','中','高']),
 ]},
 {id:'s6',title:'⑥ 冷氣',fields:[
-  T('acLivingBrand','客廳冷氣品牌'), C('acLivingType','客廳冷氣類型',['變頻','定頻','窗型','無']),
-  T('acLivingYear','客廳冷氣年份'), C('acLivingSound','客廳冷氣運轉聲',['安靜','普通','吵']),
+  C('acLivingBrand','客廳冷氣品牌',['大金','日立','三菱','國產品牌','LG','不確定','沒有安裝']),
+  C('acLivingType','客廳冷氣類型',['變頻','定頻','窗型','無']),
+  C('acLivingYear','客廳冷氣年份',['1年內','1-3年','3-5年','5-10年','10年以上','不確定']),
+  C('acLivingSound','客廳冷氣運轉聲',['安靜','普通','吵']),
   C('acLivingCool','客廳冷氣冷房',['正常','偏弱','異常']),
-  T('acMasterBrand','主臥冷氣品牌'), C('acMasterType','主臥冷氣類型',['變頻','定頻','窗型','無']),
-  T('acMasterYear','主臥冷氣年份'),
-  T('acSecondBrand','次臥冷氣品牌'), C('acSecondType','次臥冷氣類型',['變頻','定頻','窗型','無']),
-  T('acSecondYear','次臥冷氣年份'),
+  C('acMasterType','主臥冷氣類型',['變頻','定頻','窗型','無']),
+  C('acMasterYear','主臥冷氣年份',['1年內','1-3年','3-5年','5-10年','10年以上','不確定']),
+  C('acSecondType','次臥冷氣類型',['變頻','定頻','窗型','無']),
+  C('acSecondYear','次臥冷氣年份',['1年內','1-3年','3-5年','5-10年','10年以上','不確定']),
   C('acClean','冷氣清洗',['房東負責','房客負責','未談']),
   C('acRepair','冷氣故障維修',['房東負責','房客負責','需確認']),
 ]},
 {id:'s7',title:'⑦ 家具與家電',fields:[
   C('furnishStatus','出租狀態',['空屋','半家具','全家具']),
-  C('fridge','冰箱',['有','無']), T('fridgeInfo','冰箱品牌／年份'), C('fridgeSize','冰箱大小',['小','中','大']),
+  C('fridge','冰箱',['有','無']), C('fridgeSize','冰箱大小',['小','中','大']),
   C('washer','洗衣機',['有','無']), C('washerType','洗衣機類型',['直立式','滾筒式']), C('washerLoc','洗衣機位置',['室內','陽台']),
   C('waterHeaterType','熱水器類型',['天然瓦斯','電熱水器','瓦斯桶']),
-  C('waterHeaterLoc','熱水器位置',['室內','室外']), T('waterHeaterInfo','熱水器品牌／年份'),
-  C('stove','瓦斯爐',['有','無']), C('rangeHood','抽油煙機',['有','無']),
-  C('dishDryer','烘碗機',['有','無']), C('microwave','微波爐',['有','無']),
-  C('waterPurifier','飲水機／淨水器',['有','無']), C('tv','電視',['有','無']),
-  C('sofa','沙發',['有','無']), C('diningTable','餐桌',['有','無']),
-  C('bedFrame','床架',['有','無']), C('mattress','床墊',['有','無']),
-  C('wardrobe','衣櫃',['有','無']), C('desk','書桌',['有','無']), C('shoeCabinet','鞋櫃',['有','無']),
-  C('removeFurniture','不需要的家具可否搬走',['可以','不行','需談']),
+  C('waterHeaterLoc','熱水器位置',['室內','室外']),
+  M('appliances','其他家電家具（可複選）',['瓦斯爐','抽油煙機','烘碗機','微波爐','飲水機／淨水器','電視','沙發','餐桌','床架','床墊','衣櫃','書桌','鞋櫃']),
+  C('removeFurniture','不需要的家具可否搬走',['可以','不行','需談','不適用']),
 ]},
 {id:'s8',title:'⑧ 水壓、排水與衛浴',fields:[
   C('waterPressure','水壓',['強','正常','弱']),
   C('hotSpeed','熱水速度',['快','正常','慢']),
   C('hotStable','水溫穩定',['是','否']),
-  C('dryWet','浴室乾濕分離',['有','無']),
-  C('fanBath','抽風機',['有','無']),
+  M('bathroomEquip','衛浴設備（可複選）',['乾濕分離','抽風機']),
   C('drainSpeed','排水速度',['正常','偏慢']),
   C('toiletFlush','馬桶沖水',['正常','異常']),
-  C('leakMark','是否有漏水痕跡',['有','無']), T('leakLoc','漏水位置'),
-  C('wallCancer','壁癌',['有','無']), T('wallCancerLoc','壁癌位置'),
+  M('conditionIssues','屋況疑慮（可複選，沒有請不選）',['漏水痕跡','壁癌','蟑螂／蟲害痕跡']),
+  TG('issueLocations','疑慮位置（如有勾選上方項目）',['天花板','牆面','窗框周圍','浴室','廚房','陽台']),
 ]},
 {id:'s9',title:'⑨ 廚房',fields:[
   C('canCook','可開伙',['是','否']),
   C('kitchenGas','天然瓦斯',['有','無']),
   C('kitchenSpace','料理空間',['大','普通','小']),
   S('scoreCounter','流理台狀況'), S('scoreCabinet','櫥櫃狀況'),
-  C('cockroach','是否有蟑螂／蟲害痕跡',['有','無']),
-  C('kitchenWindow','廚房對外窗',['有','無']),
 ]},
 {id:'s10',title:'⑩ 陽台與曬衣',fields:[
-  C('balcony','陽台',['有','無']),
-  T('balconyDir','前陽台／後陽台'),
-  C('balconySize','大小',['大','普通','小']),
+  C('balconyType','陽台',['前陽台','後陽台','前後都有','無']),
+  C('balconySize','大小',['大','普通','小','不適用']),
   C('canDry','可曬衣',['是','否']),
   C('rainWet','會不會淋雨',['會','不會']),
-  C('balconyDrain','排水正常',['是','否']),
   C('canInstallDryer','可以裝曬衣器嗎',['可以','需詢問','不行']),
 ]},
 {id:'s11',title:'⑪ 🐱 寵物條件',fields:[
   C('petAllowed','可養貓',['明確可以','口頭可以','需確認','不行']),
-  N('petCount','可養數量'),
+  ST('petCount','可養數量',0,5,1,'隻'),
   C('petInLease','是否能寫入租約',['可以','不確定','不行']),
-  T('petDeposit','寵物押金'), T('petMonthly','寵物月費'), T('petCleanFee','寵物清潔費'),
-  M('petLimits','是否限制',['數量','體型','品種','不得上床','不得抓家具']),
+  N('petDeposit','寵物押金','$'), N('petMonthly','寵物月費','$'), N('petCleanFee','寵物清潔費','$'),
+  M('petLimits','是否限制（可複選）',['數量','體型','品種','不得上床','不得抓家具']),
   C('litterSpot','貓砂放置位置是否適合',['是','否']),
   C('windowGuard','窗戶防墜是否容易施作',['是','否']),
   C('catNet','可否自行裝防貓網',['是','否','需詢問']),
@@ -335,51 +375,43 @@ const SECTIONS=[
 ]},
 {id:'s12',title:'⑫ 大樓管理',fields:[
   C('manager','管理員',['24小時','日班','無']),
-  C('parcel','包裹代收',['有','無']),
-  C('trashCentral','垃圾集中處理',['有','無']),
-  C('trashCold','垃圾冷藏',['有','無']),
-  T('trashTime','垃圾車時間'), T('recycle','資源回收'),
+  M('buildingFacility','大樓其他設施（可複選）',['包裹代收','垃圾集中處理','垃圾冷藏','監視器']),
+  C('wasteHandling','垃圾／資源回收',['都很方便（集中處理或準時垃圾車）','需要研究一下','不清楚，要問房東']),
   C('access','門禁',['磁扣','密碼','鑰匙','其他']),
-  C('cctv','監視器',['有','無']),
 ]},
 {id:'s13',title:'⑬ 房東／房仲／代理人',fields:[
-  T('contactName','聯絡人姓名'), TEL('contactPhone','電話'), T('contactLine','LINE'), T('contactOther','其他聯絡方式'),
+  T('contactName','聯絡人姓名'), TEL('contactPhone','電話'), T('contactLine','LINE'),
   C('contactRole','身分',['房東本人','房東家人','代理人','房仲','包租代管']),
   C('shownBy','看房者',['房東本人','代理人','房仲','其他']),
   C('canContactLandlord','是否能直接聯絡真正房東',['是','否']),
   S('scoreReply','回覆速度'), S('scoreFriendly','態度友善'), S('scoreCommunicate','願意溝通'),
   S('scorePetAttitude','對寵物接受度'), S('scoreRepairAttitude','對修繕問題態度'),
-  C('pressureSign','是否有施壓立即簽約',['有','無']),
-  C('avoidAnswer','是否避答問題',['有','無']),
-  C('inconsistent','是否前後說法不一致',['有','無']),
+  TG('impressionTags','對方給你的感覺（可複選）',['好溝通','講話直接','感覺很忙','很有耐心','態度冷淡','很熱情','講話拐彎抹角','很專業','有點強勢','讓人放心'],4),
+  M('redFlagBehavior','是否出現以下狀況（可複選）',['施壓立即簽約','避答問題','前後說法不一致']),
   C('gutFeeling','我的直覺感受',['放心','普通','有點怪','不舒服']),
-  TA('impression','印象備註'),
 ]},
 {id:'s14',title:'⑭ 修繕責任',fields:[
-  TA('beforeMoveIn','入住前需要處理'),
-  TA('landlordPromise','房東承諾修繕'),
-  C('repairAC','冷氣維修',['房東','房客']),
-  C('repairHeater','熱水器維修',['房東','房客']),
-  C('repairAppliance','冰箱洗衣機維修',['房東','房客']),
-  C('repairPlumbing','水電管線',['房東','房客']),
-  C('repairWear','自然耗損',['房東','房客']),
+  TG('beforeMoveInTags','入住前需要處理（可複選）',['漏水／壁癌處理','冷氣清洗或維修','熱水器更換','油漆粉刷','居家清潔','家具搬離','鑰匙複製','紗窗紗門修補','插座維修','無需特別處理']),
+  M('repairAC_owner','冷氣維修由誰負責',['房東','房客']),
+  M('repairHeater_owner','熱水器維修由誰負責',['房東','房客']),
+  M('repairAppliance_owner','冰箱洗衣機維修由誰負責',['房東','房客']),
+  M('repairPlumbing_owner','水電管線由誰負責',['房東','房客']),
+  M('repairWear_owner','自然耗損由誰負責',['房東','房客']),
   C('promiseInContract','房東承諾是否願意寫進契約',['是','否']),
 ]},
 {id:'s15',title:'⑮ 租約條件',fields:[
   C('leaseTerm','租期',['1年','2年','3年']),
-  T('leaseDiscount','長租優惠'),
   C('rentNegotiable','租金是否可議',['是','否']),
-  T('originalPrice','原價'), T('negotiateTo','可談至'),
+  N('negotiateTo','希望談到（$）'),
   C('taxDeductible','是否可報稅',['是','否']),
-  C('subsidy','是否需租補',['不需要']),
   C('canRegister','是否可設籍',['是','否']),
-  TA('earlyTermination','提前解約條款'),
-  TA('penalty','違約金'),
-  TA('rentAdjust','租金調整條款'),
-  T('landlordEntry','房東可否進屋'),
-  TA('renewTerms','續租條件'),
-  TA('cleanRequirement','退租清潔要求'),
-  TA('restoreScope','恢復原狀範圍'),
+  CN('earlyTermination','提前解約條款',['已寫明條件','口頭承諾未寫入','未提及／需確認']),
+  CN('penalty','違約金計算方式',['以剩餘租金計算','沒收押金','固定金額','未提及／需確認']),
+  CN('rentAdjust','租金調整條款',['固定不調整','每年調漲','未提及／需確認']),
+  CN('landlordEntry','房東可否進屋',['需事先約定','契約另有規定','可隨時進入','未提及']),
+  CN('renewTerms','續租條件',['自動續約','需重新簽約','未提及／需確認']),
+  CN('cleanRequirement','退租清潔要求',['需專業清潔','基本清潔即可','未提及／需確認']),
+  CN('restoreScope','恢復原狀範圍',['需恢復原狀','正常耗損不追究','未提及／需確認']),
 ]},
 {id:'s16',title:'⑯ 入住前一定要拍照的地方',fields:[
   CL('photoChecklist','拍照清單',['全室牆面','地板刮痕','木作／櫥櫃','門窗','浴室','馬桶','流理台','冰箱內外','洗衣機','冷氣外觀與運轉','熱水器','插座','燈具','天花板','壁癌／漏水痕跡','家具原有刮傷','水錶','電錶','鑰匙數量']),
@@ -389,9 +421,9 @@ const SECTIONS=[
 ]},
 {id:'s18',title:'⑱ 看完房子的第一印象',fields:[
   C('wouldRentNow','如果現在有人跟我搶，我會不會想立刻租？',['會','可能','不會']),
-  TA('like3','最喜歡的 3 件事'),
-  TA('mind3','最介意的 3 件事'),
-  TA('dailyBother','有沒有哪個缺點是住進去後每天都會困擾我的？'),
+  TG('like3','最喜歡的幾件事（建議挑1-3個）',['採光佳','空間夠大','地點方便','生活機能好','房東好溝通','租金合理','格局方正','通風良好','有電梯','公設整潔','寵物友善','屋況新','很安靜','家具家電齊全'],3),
+  TG('mind3','最介意的幾件事（建議挑1-3個）',['租金偏高','距離較遠','屋況老舊','噪音明顯','收納空間不足','廚房太小','無電梯','西曬嚴重','寵物受限','房東態度不佳','格局奇怪','採光不足','潮濕悶熱','頂樓過熱','需自備家具'],3),
+  CN('dailyBother','有沒有哪個缺點是住進去後每天都會困擾我的？',['西曬悶熱','噪音','漏水壁癌疑慮','收納不足','通勤時間長','無特別困擾']),
 ]},
 {id:'s19',title:'⑲ 最終評分',fields:[
   S('scoreLocation','地點交通'), S('scoreRentValue','租金價格'), S('scoreLayout','坪數格局'),
@@ -402,15 +434,11 @@ const SECTIONS=[
 {id:'s20',title:'⑳ 下一步',fields:[
   C('status','目前狀態',['未看房','已預約','已看房','考慮中','第二順位','準備簽約','淘汰']),
   C('seeAgain','是否要再看第二次',['是','否']),
-  TA('askMore','需要再詢問'),
-  TA('negotiate','需要議價（租金＿＿ → 希望＿＿；其他條件＿＿）'),
-  T('lastContactName','最後聯絡人姓名'),
-  C('lastContactRole','最後聯絡人身分',['房東','代理人','仲介']),
-  TEL('lastContactPhone','最後聯絡人電話'), T('lastContactLine','最後聯絡人LINE'),
-  D('lastContactDate','最後聯絡日期'),
-  TA('lastContactReply','對方回覆'),
+  TG('askMoreTags','需要再詢問（可複選）',['水電計費方式','寵物條款','違約金條件','房東真實身分','契約完整內容','修繕責任歸屬','可否設籍','押金明細','其他費用']),
+  N('targetRent','希望談到的租金（$）'),
+  CN('lastContactReply','對方最新回覆',['已同意調整','拒絕','還在考慮中／未回覆']),
   C('decision','我的決定',['❤️ 第一順位','🧡 可以考慮','💛 備選','🩶 不適合']),
-  TA('decisionReason','決定原因'),
+  TG('decisionReasonTags','決定原因（可複選）',['分數最高','紅旗最少','房東最好溝通','租金最划算','地點最方便','唯一可以養貓','家具家電齊全','屋況最新']),
 ]},
 ];
 const SCORE_KEYS=['scoreLocation','scoreRentValue','scoreLayout','scoreLight','scoreQuiet','scoreCondition','scoreEquip','scorePetFriendly','scoreLandlord','scoreContract','scoreLife','scoreOverall'];
@@ -418,14 +446,18 @@ const SCORE_KEYS=['scoreLocation','scoreRentValue','scoreLayout','scoreLight','s
 /* =========================================================
    STATE + STORAGE
 ========================================================= */
-const STORAGE_KEY='house_viewing_records_v1';
-let state={houses:[],view:'list',editingId:null,search:'',sortBy:'score',filterStatus:''};
+const STORAGE_KEY='house_viewing_records_v2';
+let state={houses:[],view:'list',editingId:null,search:'',sortBy:'smart',filterStatus:''};
 let storageOK=true;
 
 function loadState(){
   try{
     const raw=localStorage.getItem(STORAGE_KEY);
     if(raw){const d=JSON.parse(raw); if(Array.isArray(d)) state.houses=d;}
+    else{
+      const old=localStorage.getItem('house_viewing_records_v1');
+      if(old){ const d=JSON.parse(old); if(Array.isArray(d)) state.houses=d; }
+    }
   }catch(e){ storageOK=false; }
 }
 let saveTimer=null;
@@ -440,37 +472,53 @@ function saveState(immediate){
 }
 
 function uid(){ return 'h'+Math.random().toString(36).slice(2,9)+Date.now().toString(36); }
+function newHouse(){ return {id:uid(), createdAt:new Date().toISOString(), data:{}}; }
 
-function newHouse(){
-  return {id:uid(), createdAt:new Date().toISOString(), data:{}};
+/* =========================================================
+   SCORING ENGINE
+========================================================= */
+function hasAnyScore(house){ return SCORE_KEYS.some(k=>Number(house.data[k])>0); }
+function starAvg(house){
+  let sum=0,n=0;
+  SCORE_KEYS.forEach(k=>{ const v=Number(house.data[k])||0; if(v>0){ sum+=v; n++; } });
+  return n?sum/n:0;
 }
+function redFlagCount(house){ const a=house.data.redFlags; return Array.isArray(a)?a.length:0; }
+function photoCount(house){ const a=house.data.photoChecklist; return Array.isArray(a)?a.length:0; }
+function monthlyTotal(house){ return (Number(house.data.rent)||0)+(Number(house.data.mgmtFee)||0); }
 
-function getField(schemaKey){
-  for(const sec of SECTIONS){ for(const f of sec.fields){ if(f.key===schemaKey) return f; } }
-  return null;
+function finalScore(house){
+  if(!hasAnyScore(house)) return null;
+  const base=starAvg(house)/5*100;
+  const flagPenalty=Math.min(redFlagCount(house)*4,40);
+  const gutMap={'放心':5,'普通':0,'有點怪':-8,'不舒服':-15};
+  const gutAdj=gutMap[house.data.gutFeeling]||0;
+  const petMap={'不行':-15,'需確認':-5};
+  const petAdj=petMap[house.data.petAllowed]||0;
+  let s=base-flagPenalty+gutAdj+petAdj;
+  return Math.max(0,Math.min(100,Math.round(s)));
 }
-
-function totalScore(house){
-  let sum=0, has=false;
-  SCORE_KEYS.forEach(k=>{ const v=house.data[k]; if(v){ sum+=Number(v); has=true; } });
-  return has?sum:0;
+function scoreClass(score){
+  if(score===null) return 'none';
+  if(score>=80) return 'good';
+  if(score>=60) return 'mid';
+  return 'bad';
 }
-function monthlyTotal(house){
-  const r=Number(house.data.rent)||0, m=Number(house.data.mgmtFee)||0;
-  return r+m;
+function computeRanks(){
+  const scored=state.houses.filter(h=>finalScore(h)!==null).slice()
+    .sort((a,b)=>finalScore(b)-finalScore(a));
+  const map={};
+  scored.forEach((h,i)=>{ map[h.id]=i+1; });
+  return map;
 }
-function redFlagCount(house){
-  const arr=house.data.redFlags; return Array.isArray(arr)?arr.length:0;
-}
-function photoCount(house){
-  const arr=house.data.photoChecklist; return Array.isArray(arr)?arr.length:0;
-}
+const MEDALS={1:'🥇',2:'🥈',3:'🥉'};
 
 /* =========================================================
    RENDER: LIST VIEW
 ========================================================= */
 function renderList(){
   const el=document.createElement('div');
+  const ranks=computeRanks();
   const houses=state.houses.filter(h=>{
     if(!state.search) return true;
     const s=(h.data.nickname||'')+(h.data.address||'')+(h.data.district||'');
@@ -498,16 +546,18 @@ function renderList(){
   houses.slice().reverse().forEach(h=>{
     const d=h.data;
     const card=document.createElement('div'); card.className='house-card';
-    const score=totalScore(h);
+    const sc=finalScore(h);
     const flags=redFlagCount(h);
     const rentTxt=d.rent?('$'+Number(monthlyTotal(h)).toLocaleString()+'/月'):'';
+    const rank=ranks[h.id];
+    const medal=rank&&MEDALS[rank]?MEDALS[rank]+' ':'';
     card.innerHTML=`
-      <div class="tag-line">${escapeHtml(d.nickname||'（未命名物件）')}</div>
+      <div class="tag-line">${medal}${escapeHtml(d.nickname||'（未命名物件）')}</div>
       <div class="addr">${escapeHtml(d.address||d.district||'尚未填寫地址')}</div>
       <div class="meta-row">
         ${rentTxt?`<span class="pill">${rentTxt}</span>`:''}
         ${d.ping?`<span class="pill">${escapeHtml(String(d.ping))}坪</span>`:''}
-        ${score>0?`<span class="pill score">★ ${score}/60</span>`:''}
+        <span class="score-badge ${scoreClass(sc)}">${sc===null?'尚未評分':'綜合 '+sc+'分'}</span>
         ${d.status?`<span class="pill status">${escapeHtml(d.status)}</span>`:''}
         ${flags>0?`<span class="pill flag">🚩 ${flags}項</span>`:''}
         ${d.decision?`<span class="pill decision">${escapeHtml(d.decision)}</span>`:''}
@@ -519,7 +569,7 @@ function renderList(){
 }
 
 /* =========================================================
-   RENDER: EDIT VIEW
+   RENDER: EDIT VIEW — field renderers
 ========================================================= */
 function fieldValue(house,key){ return house.data[key]; }
 function setFieldValue(house,key,val){ house.data[key]=val; saveState(); }
@@ -531,9 +581,11 @@ function renderFieldHTML(house,f){
 
   if(f.type==='text'||f.type==='date'||f.type==='time'||f.type==='tel'){
     const inp=document.createElement('input'); inp.type=f.type; inp.placeholder=f.placeholder||'';
+    if(f.list) inp.setAttribute('list',f.list);
     inp.value=val||''; inp.dataset.key=f.key;
     inp.addEventListener('input',()=>{ setFieldValue(house,f.key,inp.value); });
     wrap.appendChild(inp);
+
   } else if(f.type==='number'){
     const uw=document.createElement('div'); uw.className='unit-wrap';
     const inp=document.createElement('input'); inp.type='number'; inp.inputMode='decimal';
@@ -542,10 +594,26 @@ function renderFieldHTML(house,f){
     uw.appendChild(inp);
     if(f.unit){ const u=document.createElement('span'); u.textContent=f.unit; uw.appendChild(u); }
     wrap.appendChild(uw);
+
   } else if(f.type==='textarea'){
     const ta=document.createElement('textarea'); ta.value=val||''; ta.dataset.key=f.key;
     ta.addEventListener('input',()=>{ setFieldValue(house,f.key,ta.value); });
     wrap.appendChild(ta);
+
+  } else if(f.type==='select'){
+    const sel=document.createElement('select');
+    const blank=document.createElement('option'); blank.value=''; blank.textContent='請選擇…'; sel.appendChild(blank);
+    f.options.forEach(opt=>{ const o=document.createElement('option'); o.value=opt; o.textContent=opt; if(val===opt) o.selected=true; sel.appendChild(o); });
+    sel.addEventListener('change',()=>{ setFieldValue(house,f.key,sel.value); toggleOther(); });
+    wrap.appendChild(sel);
+    const otherWrap=document.createElement('div'); otherWrap.className='other-wrap';
+    const otherInp=document.createElement('input'); otherInp.type='text'; otherInp.placeholder='請簡短說明';
+    otherInp.value=fieldValue(house,f.key+'Other')||'';
+    otherInp.addEventListener('input',()=>{ setFieldValue(house,f.key+'Other',otherInp.value); });
+    otherWrap.appendChild(otherInp); wrap.appendChild(otherWrap);
+    function toggleOther(){ otherWrap.classList.toggle('show', sel.value==='其他'); }
+    toggleOther();
+
   } else if(f.type==='choice'){
     const row=document.createElement('div'); row.className='chip-row';
     f.options.forEach(opt=>{
@@ -556,10 +624,23 @@ function renderFieldHTML(house,f){
         setFieldValue(house,f.key,nv);
         row.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
         if(nv) chip.classList.add('on');
+        toggleOther();
+        refreshSummaryBar(house);
       });
       row.appendChild(chip);
     });
     wrap.appendChild(row);
+    let otherWrap=null,otherInp=null;
+    if(f.options.includes('其他')){
+      otherWrap=document.createElement('div'); otherWrap.className='other-wrap';
+      otherInp=document.createElement('input'); otherInp.type='text'; otherInp.placeholder='請簡短說明「其他」的內容';
+      otherInp.value=fieldValue(house,f.key+'Other')||'';
+      otherInp.addEventListener('input',()=>{ setFieldValue(house,f.key+'Other',otherInp.value); });
+      otherWrap.appendChild(otherInp); wrap.appendChild(otherWrap);
+    }
+    function toggleOther(){ if(otherWrap) otherWrap.classList.toggle('show', fieldValue(house,f.key)==='其他'); }
+    toggleOther();
+
   } else if(f.type==='multiselect'){
     const row=document.createElement('div'); row.className='chip-row';
     const arr=Array.isArray(val)?val.slice():[];
@@ -572,10 +653,22 @@ function renderFieldHTML(house,f){
         if(i>=0) cur.splice(i,1); else cur.push(opt);
         setFieldValue(house,f.key,cur);
         chip.classList.toggle('on'); chip.classList.toggle('multi');
+        toggleOther();
       });
       row.appendChild(chip);
     });
     wrap.appendChild(row);
+    let otherWrap=null,otherInp=null;
+    if(f.options.includes('其他')){
+      otherWrap=document.createElement('div'); otherWrap.className='other-wrap';
+      otherInp=document.createElement('input'); otherInp.type='text'; otherInp.placeholder='請簡短說明「其他」的內容';
+      otherInp.value=fieldValue(house,f.key+'Other')||'';
+      otherInp.addEventListener('input',()=>{ setFieldValue(house,f.key+'Other',otherInp.value); });
+      otherWrap.appendChild(otherInp); wrap.appendChild(otherWrap);
+    }
+    function toggleOther(){ if(otherWrap){ const cur=Array.isArray(fieldValue(house,f.key))?fieldValue(house,f.key):[]; otherWrap.classList.toggle('show',cur.includes('其他')); } }
+    toggleOther();
+
   } else if(f.type==='star'){
     const row=document.createElement('div'); row.className='stars';
     const cur=Number(val)||0;
@@ -591,8 +684,102 @@ function renderFieldHTML(house,f){
       row.appendChild(s);
     }
     wrap.appendChild(row);
+
+  } else if(f.type==='stepper'){
+    const row=document.createElement('div'); row.className='stepper';
+    let cur=(val===undefined||val===null||val==='')?f.min:Number(val);
+    const minus=document.createElement('button'); minus.type='button'; minus.textContent='－';
+    const plus=document.createElement('button'); plus.type='button'; plus.textContent='＋';
+    const valSpan=document.createElement('span'); valSpan.className='val';
+    function fmt(v){ return (v%1!==0?v.toFixed(1):v)+(f.unit?f.unit:''); }
+    valSpan.textContent=fmt(cur);
+    minus.addEventListener('click',()=>{ cur=Math.max(f.min,+(cur-f.step).toFixed(2)); valSpan.textContent=fmt(cur); setFieldValue(house,f.key,cur); if(f.key==='floorAt'||f.key==='floorTotal') refreshTopBadge(); });
+    plus.addEventListener('click',()=>{ cur=Math.min(f.max,+(cur+f.step).toFixed(2)); valSpan.textContent=fmt(cur); setFieldValue(house,f.key,cur); if(f.key==='floorAt'||f.key==='floorTotal') refreshTopBadge(); });
+    row.appendChild(minus); row.appendChild(valSpan); row.appendChild(plus);
+    wrap.appendChild(row);
+    if(val===undefined) setFieldValue(house,f.key,cur);
+    if(f.key==='floorTotal'){
+      const badge=document.createElement('div'); badge.className='top-badge'; badge.id='topFloorBadge';
+      wrap.appendChild(badge);
+    }
+
+  } else if(f.type==='tags'){
+    const row=document.createElement('div'); row.className='chip-row';
+    const arr=Array.isArray(val)?val.slice():[];
+    const counter=document.createElement('div'); counter.className='tags-counter';
+    function updateCounter(){ const cur=Array.isArray(fieldValue(house,f.key))?fieldValue(house,f.key):[]; counter.textContent=`已選 ${cur.length} 項`; }
+    f.options.forEach(opt=>{
+      const chip=document.createElement('button'); chip.type='button';
+      chip.className='chip'+(arr.includes(opt)?' on multi':''); chip.textContent=opt;
+      chip.addEventListener('click',()=>{
+        const cur=Array.isArray(fieldValue(house,f.key))?fieldValue(house,f.key).slice():[];
+        const i=cur.indexOf(opt);
+        if(i>=0) cur.splice(i,1); else cur.push(opt);
+        setFieldValue(house,f.key,cur);
+        chip.classList.toggle('on'); chip.classList.toggle('multi');
+        updateCounter();
+      });
+      row.appendChild(chip);
+    });
+    if(f.allowCustom){
+      const addChip=document.createElement('button'); addChip.type='button'; addChip.className='chip dashed'; addChip.textContent='＋自訂';
+      addChip.addEventListener('click',()=>{ customWrap.classList.toggle('show'); if(customWrap.classList.contains('show')) customInput.focus(); });
+      row.appendChild(addChip);
+    }
+    wrap.appendChild(row);
+    wrap.appendChild(counter); updateCounter();
+    let customWrap,customInput;
+    if(f.allowCustom){
+      customWrap=document.createElement('div'); customWrap.className='tags-custom-wrap';
+      customInput=document.createElement('input'); customInput.type='text'; customInput.placeholder='輸入其他項目…';
+      const okBtn=document.createElement('button'); okBtn.type='button'; okBtn.textContent='新增';
+      okBtn.addEventListener('click',()=>{
+        const v=customInput.value.trim(); if(!v) return;
+        const cur=Array.isArray(fieldValue(house,f.key))?fieldValue(house,f.key).slice():[];
+        if(!cur.includes(v)){
+          cur.push(v); setFieldValue(house,f.key,cur);
+          const chip=document.createElement('button'); chip.type='button'; chip.className='chip on multi'; chip.textContent=v;
+          chip.addEventListener('click',()=>{
+            const c2=fieldValue(house,f.key).slice(); const i2=c2.indexOf(v); if(i2>=0) c2.splice(i2,1);
+            setFieldValue(house,f.key,c2); chip.remove(); updateCounter();
+          });
+          row.insertBefore(chip,row.lastElementChild);
+          updateCounter();
+        }
+        customInput.value=''; customWrap.classList.remove('show');
+      });
+      customWrap.appendChild(customInput); customWrap.appendChild(okBtn);
+      wrap.appendChild(customWrap);
+    }
+
+  } else if(f.type==='choicenote'){
+    const row=document.createElement('div'); row.className='chip-row';
+    const cur=val;
+    f.options.forEach(opt=>{
+      const chip=document.createElement('button'); chip.type='button'; chip.className='chip'+(cur===opt?' on':'');
+      chip.textContent=opt;
+      chip.addEventListener('click',()=>{
+        const nv=(fieldValue(house,f.key)===opt)?'':opt;
+        setFieldValue(house,f.key,nv);
+        row.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+        if(nv) chip.classList.add('on');
+      });
+      row.appendChild(chip);
+    });
+    wrap.appendChild(row);
+    const noteVal=fieldValue(house,f.key+'Note');
+    const toggleBtn=document.createElement('button'); toggleBtn.type='button'; toggleBtn.className='note-toggle';
+    toggleBtn.textContent=noteVal?'✎ 編輯備註':'＋ 加註備註（選填）';
+    const noteWrap=document.createElement('div'); noteWrap.className='note-wrap'+(noteVal?' show':'');
+    const noteInp=document.createElement('input'); noteInp.type='text'; noteInp.placeholder='補充說明（選填）';
+    noteInp.value=noteVal||'';
+    noteInp.addEventListener('input',()=>{ setFieldValue(house,f.key+'Note',noteInp.value); });
+    noteWrap.appendChild(noteInp);
+    toggleBtn.addEventListener('click',()=>{ noteWrap.classList.toggle('show'); if(noteWrap.classList.contains('show')) noteInp.focus(); });
+    wrap.appendChild(toggleBtn); wrap.appendChild(noteWrap);
+
   } else if(f.type==='checklist'){
-    wrap.removeChild(label); // custom label with count
+    wrap.removeChild(label);
     const lbl2=document.createElement('label');
     const arr=Array.isArray(val)?val:[];
     lbl2.textContent=f.label+`（已勾 ${arr.length}/${f.items.length}）`;
@@ -609,6 +796,7 @@ function renderFieldHTML(house,f){
         setFieldValue(house,f.key,cur);
         row.classList.toggle('on');
         lbl2.textContent=f.label+`（已勾 ${cur.length}/${f.items.length}）`;
+        refreshSummaryBar(house);
       });
       list.appendChild(row);
     });
@@ -617,11 +805,21 @@ function renderFieldHTML(house,f){
   return wrap;
 }
 
+function refreshTopBadge(){
+  const badge=document.getElementById('topFloorBadge');
+  if(!badge) return;
+  const house=state.houses.find(h=>h.id===state.editingId);
+  if(!house) return;
+  const at=Number(house.data.floorAt)||0, tot=Number(house.data.floorTotal)||0;
+  badge.textContent=(at>0&&tot>0&&at===tot)?'🔝 這是頂樓':'';
+}
+
 function refreshSummaryBar(house){
   const bar=document.getElementById('summaryBar');
   if(!bar) return;
   bar.querySelector('[data-sum="rent"]').textContent = house.data.rent?('$'+monthlyTotal(house).toLocaleString()):'—';
-  bar.querySelector('[data-sum="score"]').textContent = totalScore(house)+'/60';
+  const sc=finalScore(house);
+  bar.querySelector('[data-sum="score"]').textContent = sc===null?'—':(sc+'分');
   bar.querySelector('[data-sum="flag"]').textContent = redFlagCount(house);
 }
 
@@ -645,10 +843,11 @@ function renderEdit(){
   });
   el.appendChild(hd);
 
+  const sc=finalScore(house);
   const bar=document.createElement('div'); bar.className='summary-bar'; bar.id='summaryBar';
   bar.innerHTML=`
     <div class="summary-tile"><div class="val" data-sum="rent">${house.data.rent?('$'+monthlyTotal(house).toLocaleString()):'—'}</div><div class="lbl">每月固定支出</div></div>
-    <div class="summary-tile"><div class="val" data-sum="score">${totalScore(house)}/60</div><div class="lbl">目前總分</div></div>
+    <div class="summary-tile"><div class="val" data-sum="score">${sc===null?'—':(sc+'分')}</div><div class="lbl">系統綜合評分</div></div>
     <div class="summary-tile"><div class="val" data-sum="flag">${redFlagCount(house)}</div><div class="lbl">紅旗警訊</div></div>`;
   el.appendChild(bar);
 
@@ -664,18 +863,53 @@ function renderEdit(){
     el.appendChild(det);
   });
 
+  setTimeout(refreshTopBadge,0);
   return el;
 }
 
 /* =========================================================
-   RENDER: COMPARE VIEW
+   RENDER: COMPARE VIEW（含排行榜）
 ========================================================= */
+function buildTags(house,rank,cheapest){
+  const tags=[];
+  if(redFlagCount(house)===0) tags.push('零紅旗');
+  if(house.data.gutFeeling==='放心') tags.push('房東放心');
+  if(house.id===cheapest) tags.push('租金最低');
+  if(house.data.petAllowed==='明確可以') tags.push('明確可貓');
+  return tags.slice(0,2);
+}
+
 function renderCompare(){
   const el=document.createElement('div');
+  const scoredHouses=state.houses.filter(h=>finalScore(h)!==null);
+
+  if(scoredHouses.length>0){
+    const sorted=scoredHouses.slice().sort((a,b)=>finalScore(b)-finalScore(a));
+    const withRent=scoredHouses.filter(h=>h.data.rent);
+    const cheapest=withRent.length?withRent.reduce((a,b)=>monthlyTotal(a)<=monthlyTotal(b)?a:b).id:null;
+    const top=sorted.slice(0,3);
+    const card=document.createElement('div'); card.className='top-pick-card';
+    card.innerHTML=`<h3>🏆 目前排行榜（依系統綜合評分）</h3>`;
+    top.forEach((h,i)=>{
+      const row=document.createElement('div'); row.className='top-pick-row';
+      const tags=buildTags(h,i+1,cheapest);
+      row.innerHTML=`<span class="medal">${MEDALS[i+1]||''}</span>
+        <div class="info"><div class="t1">${escapeHtml(h.data.nickname||'（未命名）')}</div>
+        <div class="tags">${tags.map(t=>`<span>${t}</span>`).join('')}</div></div>
+        <div class="n">${finalScore(h)}</div>`;
+      row.addEventListener('click',()=>{ state.editingId=h.id; state.view='edit'; renderApp(); });
+      card.appendChild(row);
+    });
+    el.appendChild(card);
+    const explain=document.createElement('div'); explain.className='score-explain';
+    explain.textContent='綜合評分＝12項星等平均換算100分，再依紅旗數量、直覺感受、寵物條件加減分';
+    el.appendChild(explain);
+  }
+
   const ctrl=document.createElement('div'); ctrl.className='compare-controls';
   ctrl.innerHTML=`
     <select id="sortSel">
-      <option value="score">依總分排序（高→低）</option>
+      <option value="smart">依系統綜合評分（高→低）</option>
       <option value="rent">依租金排序（低→高）</option>
       <option value="flag">依紅旗數排序（低→高）</option>
       <option value="date">依看房日期（新→舊）</option>
@@ -703,7 +937,7 @@ function renderCompare(){
   }
 
   houses.sort((a,b)=>{
-    if(state.sortBy==='score') return totalScore(b)-totalScore(a);
+    if(state.sortBy==='smart'){ const sa=finalScore(a),sb=finalScore(b); if(sa===null&&sb===null) return 0; if(sa===null) return 1; if(sb===null) return -1; return sb-sa; }
     if(state.sortBy==='rent') return (monthlyTotal(a)||1e12)-(monthlyTotal(b)||1e12);
     if(state.sortBy==='flag') return redFlagCount(a)-redFlagCount(b);
     if(state.sortBy==='date') return (b.data.viewDate||'').localeCompare(a.data.viewDate||'');
@@ -712,13 +946,14 @@ function renderCompare(){
 
   houses.forEach((h,i)=>{
     const row=document.createElement('div'); row.className='compare-row';
+    const sc=finalScore(h);
     row.innerHTML=`
       <div class="rank">${i+1}</div>
       <div class="info">
         <div class="t1">${escapeHtml(h.data.nickname||'（未命名）')}</div>
         <div class="t2">${h.data.rent?('$'+monthlyTotal(h).toLocaleString()+'/月　'):''}${h.data.status||''}${redFlagCount(h)>0?'　🚩'+redFlagCount(h):''}</div>
       </div>
-      <div class="score"><div class="n">${totalScore(h)}</div><div class="u">/60</div></div>`;
+      <span class="score-badge ${scoreClass(sc)}">${sc===null?'尚未評分':sc+'分'}</span>`;
     row.addEventListener('click',()=>{ state.editingId=h.id; state.view='edit'; renderApp(); });
     el.appendChild(row);
   });
@@ -726,7 +961,7 @@ function renderCompare(){
 }
 
 /* =========================================================
-   RENDER: HELP VIEW（該問房東/房仲的問題彙整）
+   RENDER: HELP VIEW
 ========================================================= */
 const HELP_QUESTIONS=[
   {cat:'費用', qs:['水電怎麼計費？夏天電費是不是特別貴？','管理費包含哪些項目？垃圾費另外算嗎？','網路要自己申辦還是已經有？','押金退還的條件跟時間？']},
@@ -806,13 +1041,15 @@ function csvEscape(v){
 }
 function exportCSV(){
   const cols=[['nickname','一句話辨識'],['address','完整地址'],['district','行政區'],['viewDate','看房日期'],
-    ['rent','月租'],['mgmtFee','管理費'],['ping','坪數'],['layout','格局'],['floor','樓層'],['elevator','電梯'],
+    ['rent','月租'],['mgmtFee','管理費'],['ping','坪數'],['rooms','房'],['livingRooms','廳'],['bathrooms','衛'],
+    ['floorAt','所在樓層'],['floorTotal','共幾層'],['elevator','電梯'],
     ['furnishStatus','出租狀態'],['acLivingType','客廳冷氣類型'],['petAllowed','可養貓'],
     ['status','目前狀態'],['decision','我的決定']];
-  const header=cols.map(c=>csvEscape(c[1])).concat(['總分','紅旗數']).join(',');
+  const header=cols.map(c=>csvEscape(c[1])).concat(['系統綜合評分','紅旗數']).join(',');
   const rows=state.houses.map(h=>{
     const vals=cols.map(c=>csvEscape(h.data[c[0]]));
-    vals.push(totalScore(h)); vals.push(redFlagCount(h));
+    const sc=finalScore(h);
+    vals.push(sc===null?'':sc); vals.push(redFlagCount(h));
     return vals.join(',');
   });
   const csv='﻿'+[header,...rows].join('\r\n');
