@@ -3,7 +3,7 @@
         2) 沒網路（例如在大樓裡收訊差）也能開啟並填寫紀錄
    注意：看房紀錄本身存在 localStorage，不經過這裡，離線填寫一樣會保存。 */
 
-const CACHE = 'house-viewing-v2';
+const CACHE = 'house-viewing-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -17,9 +17,15 @@ const ASSETS = [
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE)
-      .then(c => c.addAll(ASSETS))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE).then(c =>
+      // 用 cache:'reload' 略過瀏覽器 HTTP 快取，確保存進來的一定是伺服器上的最新版；
+      // 逐一處理並容錯，單一檔案失敗不會讓整個安裝失敗。
+      Promise.all(ASSETS.map(url =>
+        fetch(new Request(url, { cache: 'reload' }))
+          .then(res => (res.ok ? c.put(url, res) : null))
+          .catch(() => null)
+      ))
+    ).then(() => self.skipWaiting())
   );
 });
 
