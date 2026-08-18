@@ -22,11 +22,24 @@
 
 ## 加到手機主畫面
 
-- **iPhone（Safari）**：分享 → 加入主畫面
-- **Android（Chrome）**：右上角選單 → 加到主畫面
+已設定完整的 PWA manifest 與 App 圖示，加到主畫面後就跟原生 App 一樣：獨立視窗、沒有網址列、有專屬圖示。
 
-加完之後開起來就跟 App 一樣，沒有網址列。
+- **iPhone（Safari）**：分享 → 加入主畫面
+- **Android（Chrome）**：網址列會直接跳出「安裝應用程式」，或從右上角選單 → 安裝應用程式
+
+## 離線可用
+
+裝了 Service Worker，**第一次開過之後就算完全沒網路也能用**。看房時常在收訊差的大樓或地下室，一樣可以照常填寫紀錄。
 
 ## 技術
 
 單一 `index.html`，原生 HTML／CSS／JavaScript，無框架、無相依套件。
+
+```
+index.html        App 本體（含全部畫面與邏輯）
+manifest.json     PWA 設定：名稱、圖示、主題色、獨立視窗
+sw.js             Service Worker：離線快取
+icons/            App 圖示（192／512／maskable／apple-touch／favicon）
+```
+
+> 換圖示或改 `manifest.json` 之後，記得把 `sw.js` 裡的 `CACHE` 版本號往上加（例如 `house-viewing-v2`），舊快取才會被清掉。

@@ -7,7 +7,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="看房紀錄">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="租屋看房用的檢查表：20 大類項目、評分比較、紅旗警訊，資料只存在自己的手機裡。">
 <title>看房紀錄 App</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <style>
 :root{
   --accent:#2E86AB;
@@ -878,6 +884,11 @@ document.getElementById('btnMenu').addEventListener('click',openMenu);
 
 loadState();
 renderApp();
+
+/* 註冊 Service Worker：沒網路時也能開啟 App */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
 </script>
 </body>
 </html>
