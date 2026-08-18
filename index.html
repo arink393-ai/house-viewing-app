@@ -195,6 +195,47 @@ details.section .section-body{padding:4px 14px 14px;border-top:1px solid var(--l
 .toast.show{opacity:1;}
 .save-banner{background:#FFF3DC;color:#8A6416;font-size:11.5px;text-align:center;padding:6px;border-radius:8px;margin-bottom:10px;}
 .score-explain{font-size:11px;color:var(--sub);text-align:center;margin:-8px 0 14px;}
+
+/* ---------- 紙本列印表格 ---------- */
+#printRoot{display:none;}
+.pf-wrap{color:#000;font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;}
+.pf-head{border-bottom:2px solid #000;padding-bottom:2mm;margin-bottom:3mm;}
+.pf-title{font-size:14pt;font-weight:800;margin:0;letter-spacing:1px;}
+.pf-sub{font-size:7.5pt;color:#555;margin-top:0.5mm;}
+.pf-hrow{display:flex;flex-wrap:wrap;gap:1.5mm 5mm;margin-top:2.5mm;}
+.pf-hf{font-size:9pt;display:flex;align-items:flex-end;gap:1.5mm;flex:1 1 auto;}
+.pf-hf b{font-weight:700;white-space:nowrap;}
+.pf-hl{flex:1;min-width:26mm;border-bottom:1px solid #000;min-height:5mm;padding:0 1mm;}
+.pf-sec{break-inside:auto;page-break-inside:auto;margin-bottom:2.5mm;}
+.pf-sech{font-size:10.5pt;font-weight:800;background:#eceff1;border-left:3px solid #000;
+  padding:1.2mm 2mm;margin:0 0 1.8mm;break-after:avoid;page-break-after:avoid;}
+.pf-body{display:grid;grid-template-columns:1fr 1fr;gap:1.8mm 6mm;}
+.pf-f{break-inside:avoid;page-break-inside:avoid;}
+.pf-f.wide{grid-column:1/-1;}
+.pf-l{font-size:8pt;color:#333;font-weight:600;margin-bottom:0.4mm;line-height:1.25;}
+.pf-line{border-bottom:1px dotted #666;min-height:6.8mm;font-size:9.5pt;padding:0 1mm;
+  display:flex;align-items:flex-end;justify-content:space-between;gap:2mm;}
+.pf-line.pf-note{min-height:5mm;margin-top:0.8mm;}
+.pf-u{color:#666;font-size:7.5pt;white-space:nowrap;}
+.pf-opts{display:flex;flex-wrap:wrap;gap:0.6mm 3mm;font-size:9pt;line-height:1.6;padding:0.3mm 0;}
+.pf-o{white-space:nowrap;}
+.pf-o.on{font-weight:800;}
+.pf-stars{font-size:12pt;letter-spacing:2.5px;line-height:1.3;}
+.pf-cl{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5mm 3mm;font-size:8.8pt;line-height:1.55;}
+.pf-ci{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pf-ci.on{font-weight:800;}
+.pf-ta{border:1px dotted #666;min-height:12mm;font-size:9pt;padding:1mm;white-space:pre-wrap;}
+.pf-foot{margin-top:3mm;padding-top:1.5mm;border-top:1px solid #999;font-size:7pt;color:#666;
+  display:flex;justify-content:space-between;}
+
+@media print{
+  html,body{height:auto !important;background:#fff !important;overflow:visible !important;}
+  body{display:block !important;}
+  body>*{display:none !important;}
+  body>#printRoot{display:block !important;}
+  .pf-sech{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  @page{size:A4;margin:11mm 9mm 9mm;}
+}
 </style>
 </head>
 <body>
@@ -218,6 +259,7 @@ details.section .section-body{padding:4px 14px 14px;border-top:1px solid var(--l
 
 <input type="file" id="fileImport" accept="application/json" style="display:none">
 <div id="toast" class="toast"></div>
+<div id="printRoot"></div>
 
 <datalist id="mrtStations">
 <!-- 常見捷運站，僅供輸入建議，仍可自行輸入任何站名 -->
@@ -1008,12 +1050,14 @@ function openMenu(){
     <div class="menu-item" id="mExport"><span class="ic">⬇️</span><div><div>匯出備份（JSON）</div><div class="menu-desc">存成一個小檔案，可以傳到雲端硬碟或另一支手機／電腦匯入</div></div></div>
     <div class="menu-item" id="mImport"><span class="ic">⬆️</span><div><div>匯入備份（JSON）</div><div class="menu-desc">讀回之前匯出的備份檔（會與目前資料合併）</div></div></div>
     <div class="menu-item" id="mCsv"><span class="ic">📑</span><div><div>匯出成 CSV（可用 Excel／Google試算表開啟）</div><div class="menu-desc">方便用電腦做進一步比較</div></div></div>
+    <div class="menu-item" id="mPrint"><span class="ic">🖨️</span><div><div>列印紙本表格</div><div class="menu-desc">印出空白表格現場手寫，或把已填的紀錄印出來</div></div></div>
     <div class="menu-item" id="mHome"><span class="ic">📲</span><div><div>加到手機主畫面</div><div class="menu-desc">iPhone：分享 → 加入主畫面；Android：瀏覽器選單 → 加到主畫面</div></div></div>
     <div class="menu-item" id="mClear"><span class="ic">🗑️</span><div><div style="color:var(--red)">清空全部紀錄</div></div></div>`;
   sheet.querySelector('.modal-close').addEventListener('click',()=>bd.remove());
   sheet.querySelector('#mExport').addEventListener('click',()=>{ exportJSON(); bd.remove(); });
   sheet.querySelector('#mImport').addEventListener('click',()=>{ document.getElementById('fileImport').click(); bd.remove(); });
   sheet.querySelector('#mCsv').addEventListener('click',()=>{ exportCSV(); bd.remove(); });
+  sheet.querySelector('#mPrint').addEventListener('click',()=>{ bd.remove(); openPrintDialog(); });
   sheet.querySelector('#mHome').addEventListener('click',()=>{ showToast('請用瀏覽器的「分享」或選單功能加入主畫面'); bd.remove(); });
   sheet.querySelector('#mClear').addEventListener('click',()=>{
     if(confirm('確定要清空所有看房紀錄嗎？建議先匯出備份！')){
@@ -1121,6 +1165,220 @@ document.getElementById('btnMenu').addEventListener('click',openMenu);
 
 loadState();
 renderApp();
+
+/* =========================================================
+   紙本列印表格
+   空白版：現場手寫用；已填版：把某筆紀錄印出來
+========================================================= */
+const PRINT_ESSENTIAL=['s2','s3','s4','s5','s8','s9','s10','s11','s17','s19'];
+let printOpts={mode:'blank',houseId:null,sections:SECTIONS.map(s=>s.id)};
+
+function pfText(v){
+  if(v===undefined||v===null||v==='') return '';
+  return escapeHtml(Array.isArray(v)?v.join('、'):String(v));
+}
+function pfOne(options,v){
+  return '<div class="pf-opts">'+options.map(o=>
+    `<span class="pf-o${v===o?' on':''}">${v===o?'●':'○'} ${escapeHtml(o)}</span>`).join('')+'</div>';
+}
+function pfMulti(options,arr){
+  return '<div class="pf-opts">'+options.map(o=>
+    `<span class="pf-o${arr.includes(o)?' on':''}">${arr.includes(o)?'☑':'☐'} ${escapeHtml(o)}</span>`).join('')+'</div>';
+}
+
+function pfWide(options){
+  // 半欄大約放得下 36 個字寬（含標記與間距），超過才整列排，避免右欄空掉
+  return options.reduce((a,o)=>a+o.length+2.5,0)>36;
+}
+function printFieldHTML(f,d){
+  const filled=!!d;
+  const v=filled?d[f.key]:undefined;
+  const label=`<div class="pf-l">${escapeHtml(f.label)}</div>`;
+  let body='',wide=false;
+
+  if(f.type==='text'||f.type==='date'||f.type==='time'||f.type==='tel'){
+    body=`<div class="pf-line">${pfText(v)}</div>`;
+  }else if(f.type==='number'||f.type==='stepper'){
+    const u=f.unit?`<span class="pf-u">${escapeHtml(f.unit)}</span>`:'';
+    body=`<div class="pf-line"><span>${pfText(v)}</span>${u}</div>`;
+  }else if(f.type==='select'){
+    // 選項太多（例如行政區）印成一整排會太擠，留空白手寫
+    if(f.options.length>8){ body=`<div class="pf-line">${pfText(v)}</div>`; }
+    else { body=pfOne(f.options,v); wide=pfWide(f.options); }
+  }else if(f.type==='choice'){
+    body=pfOne(f.options,v); wide=pfWide(f.options);
+  }else if(f.type==='choicenote'){
+    body=pfOne(f.options,v)+`<div class="pf-line pf-note">${filled?pfText(d[f.key+'Note']):''}</div>`;
+    wide=true;
+  }else if(f.type==='multiselect'||f.type==='tags'){
+    const arr=Array.isArray(v)?v:[];
+    body=pfMulti(f.options,arr);
+    if(f.allowCustom){
+      const extra=arr.filter(x=>!f.options.includes(x));
+      body+=`<div class="pf-line pf-note">${extra.length?escapeHtml(extra.join('、')):''}</div>`;
+    }
+    wide=pfWide(f.options);
+  }else if(f.type==='star'){
+    const n=Number(v)||0;
+    let s='';
+    for(let i=1;i<=5;i++) s+=(filled&&i<=n)?'★':'☆';
+    body=`<div class="pf-stars">${s}</div>`;
+  }else if(f.type==='textarea'){
+    const t=pfText(v);
+    body=(filled&&t)?`<div class="pf-ta">${t}</div>`:'<div class="pf-line"></div><div class="pf-line"></div>';
+    wide=true;
+  }else if(f.type==='checklist'){
+    const arr=Array.isArray(v)?v:[];
+    body='<div class="pf-cl">'+f.items.map(it=>
+      `<span class="pf-ci${filled&&arr.includes(it)?' on':''}">${filled&&arr.includes(it)?'☑':'☐'} ${escapeHtml(it)}</span>`
+    ).join('')+'</div>';
+    wide=true;
+  }
+  return `<div class="pf-f${wide?' wide':''}">${label}${body}</div>`;
+}
+
+function buildPrintHTML(){
+  const house=printOpts.mode==='filled'
+    ? state.houses.find(h=>h.id===printOpts.houseId) : null;
+  const d=house?house.data:null;
+  const hf=(lab,val)=>`<span class="pf-hf"><b>${lab}</b><span class="pf-hl">${val||''}</span></span>`;
+
+  let html='<div class="pf-wrap"><div class="pf-head">'+
+    '<div class="pf-title">🏠 看房紀錄表</div>'+
+    `<div class="pf-sub">${house?'已填紀錄':'現場手寫用'}　·　逐項確認，避免看完就忘</div>`+
+    '<div class="pf-hrow">'+
+      hf('物件',d?pfText(d.nickname):'')+
+      hf('看房日期',d?pfText(d.viewDate):'')+
+      hf('時間',d?pfText(d.viewTime):'')+
+    '</div><div class="pf-hrow">'+
+      hf('地址',d?pfText(d.address):'')+
+    '</div><div class="pf-hrow">'+
+      hf('聯絡人',d?pfText(d.contactName):'')+
+      hf('電話',d?pfText(d.contactPhone):'')+
+    '</div></div>';
+
+  SECTIONS.filter(s=>printOpts.sections.includes(s.id)).forEach(sec=>{
+    html+=`<div class="pf-sec"><div class="pf-sech">${escapeHtml(sec.title)}</div><div class="pf-body">`;
+    sec.fields.forEach(f=>{ html+=printFieldHTML(f,d); });
+    html+='</div></div>';
+  });
+
+  html+='<div class="pf-foot"><span>看房紀錄 App</span><span>簽名／備註：____________________</span></div></div>';
+  return html;
+}
+
+/* 先離畫面外量一次高度，換算大概幾張 A4 */
+function estimatePages(){
+  const root=document.getElementById('printRoot');
+  root.innerHTML=buildPrintHTML();
+  const prev=root.getAttribute('style')||'';
+  root.setAttribute('style','display:block;position:absolute;left:-99999px;top:0;width:192mm;visibility:hidden;');
+  const h=root.scrollHeight;
+  root.setAttribute('style',prev);
+  const pageH=276*(96/25.4);   // A4 高 297mm 扣掉上下邊界
+  return Math.max(1,Math.ceil(h/pageH));
+}
+
+function doPrint(){
+  document.getElementById('printRoot').innerHTML=buildPrintHTML();
+  window.print();
+}
+
+function openPrintDialog(){
+  const bd=document.createElement('div'); bd.className='modal-backdrop';
+  bd.addEventListener('click',e=>{ if(e.target===bd) bd.remove(); });
+  const sheet=document.createElement('div'); sheet.className='modal-sheet'; sheet.style.position='relative';
+
+  // 從編輯畫面進來就預設印這一筆
+  const editing=state.editingId?state.houses.find(h=>h.id===state.editingId):null;
+  if(editing){ printOpts.mode='filled'; printOpts.houseId=editing.id; }
+  else { printOpts.mode='blank'; printOpts.houseId=null; }
+
+  sheet.innerHTML=`
+    <button class="modal-close">✕</button>
+    <h2>🖨️ 列印紙本表格</h2>
+    <div class="field"><label>列印內容</label>
+      <div class="chip-row" id="pMode">
+        <button type="button" class="chip" data-m="blank">空白表格（現場手寫）</button>
+        <button type="button" class="chip" data-m="filled">已填的紀錄</button>
+      </div>
+    </div>
+    <div class="field" id="pHouseWrap" style="display:none"><label>要印哪一筆</label>
+      <select id="pHouse" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:9px;font-size:14px;font-family:inherit;background:#fff;color:var(--text)"></select>
+    </div>
+    <div class="field"><label id="pCount">包含分區</label>
+      <div class="chip-row" style="margin-bottom:8px">
+        <button type="button" class="chip" id="pAll">全選</button>
+        <button type="button" class="chip" id="pEss">現場精簡</button>
+        <button type="button" class="chip" id="pNone">全不選</button>
+      </div>
+      <div id="pSecs" style="max-height:34vh;overflow-y:auto;border:1px solid var(--line);border-radius:10px;padding:4px 10px"></div>
+    </div>
+    <button type="button" id="pGo" style="width:100%;margin-top:14px;padding:13px;border:none;border-radius:12px;
+      background:var(--accent);color:#fff;font-size:15px;font-weight:700;font-family:inherit">列印</button>
+    <div class="menu-desc" style="margin-top:10px;line-height:1.6">
+      建議用 A4 直式列印。iPhone 從主畫面 App 開啟時若沒有反應，請改用 Safari 開網頁再列印。
+    </div>`;
+
+  const secBox=sheet.querySelector('#pSecs');
+  SECTIONS.forEach(s=>{
+    const row=document.createElement('div');
+    row.className='checklist-item'+(printOpts.sections.includes(s.id)?' on':'');
+    row.innerHTML=`<span class="box">✓</span><span>${escapeHtml(s.title)}</span>`;
+    row.addEventListener('click',()=>{
+      const i=printOpts.sections.indexOf(s.id);
+      if(i>=0) printOpts.sections.splice(i,1); else printOpts.sections.push(s.id);
+      row.classList.toggle('on');
+      refresh();
+    });
+    secBox.appendChild(row);
+  });
+
+  const houseSel=sheet.querySelector('#pHouse');
+  state.houses.forEach(h=>{
+    const o=document.createElement('option');
+    o.value=h.id; o.textContent=h.data.nickname||'（未命名物件）';
+    houseSel.appendChild(o);
+  });
+  if(printOpts.houseId) houseSel.value=printOpts.houseId;
+  houseSel.addEventListener('change',()=>{ printOpts.houseId=houseSel.value; refresh(); });
+
+  function refresh(){
+    sheet.querySelectorAll('#pMode .chip').forEach(c=>
+      c.classList.toggle('on',c.dataset.m===printOpts.mode));
+    sheet.querySelector('#pHouseWrap').style.display=(printOpts.mode==='filled')?'':'none';
+    secBox.querySelectorAll('.checklist-item').forEach((row,i)=>
+      row.classList.toggle('on',printOpts.sections.includes(SECTIONS[i].id)));
+    const n=printOpts.sections.length;
+    const pages=n?estimatePages():0;
+    sheet.querySelector('#pCount').textContent=
+      n?`包含分區（已選 ${n}/${SECTIONS.length}　約 ${pages} 頁）`:'包含分區（請至少選一區）';
+    sheet.querySelector('#pGo').disabled=!n;
+    sheet.querySelector('#pGo').style.opacity=n?'1':'.5';
+  }
+
+  sheet.querySelectorAll('#pMode .chip').forEach(c=>c.addEventListener('click',()=>{
+    if(c.dataset.m==='filled'&&state.houses.length===0){ showToast('還沒有任何紀錄可以印'); return; }
+    printOpts.mode=c.dataset.m;
+    if(printOpts.mode==='filled'&&!printOpts.houseId) printOpts.houseId=houseSel.value;
+    refresh();
+  }));
+  sheet.querySelector('#pAll').addEventListener('click',()=>{ printOpts.sections=SECTIONS.map(s=>s.id); refresh(); });
+  sheet.querySelector('#pEss').addEventListener('click',()=>{ printOpts.sections=PRINT_ESSENTIAL.slice(); refresh(); });
+  sheet.querySelector('#pNone').addEventListener('click',()=>{ printOpts.sections=[]; refresh(); });
+  sheet.querySelector('.modal-close').addEventListener('click',()=>bd.remove());
+  sheet.querySelector('#pGo').addEventListener('click',()=>{
+    if(!printOpts.sections.length) return;
+    bd.remove();
+    setTimeout(doPrint,120);
+  });
+
+  bd.appendChild(sheet);
+  document.body.appendChild(bd);
+  refresh();
+}
+
+window.addEventListener('afterprint',()=>{ document.getElementById('printRoot').innerHTML=''; });
 
 /* 註冊 Service Worker：沒網路時也能開啟 App */
 if('serviceWorker' in navigator){
