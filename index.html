@@ -236,6 +236,25 @@ details.section .section-body{padding:4px 14px 14px;border-top:1px solid var(--l
   .pf-sech{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   @page{size:A4;margin:11mm 9mm 9mm;}
 }
+
+/* ---------- 照片區 ---------- */
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.photo-cell{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:#EEF3F5;}
+.photo-cell img{width:100%;height:100%;object-fit:cover;display:block;}
+.photo-del{position:absolute;top:3px;right:3px;width:22px;height:22px;border:none;border-radius:50%;
+  background:rgba(0,0,0,.55);color:#fff;font-size:12px;line-height:1;padding:0;}
+.photo-tag{position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,.6);color:#fff;
+  font-size:10px;padding:1px 5px;border-radius:4px;}
+.photo-viewer{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:90;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;}
+.photo-viewer img{max-width:100%;max-height:78vh;object-fit:contain;}
+.pv-bar{display:flex;align-items:center;gap:18px;color:#fff;font-size:14px;margin-top:14px;}
+.pv-bar button{background:rgba(255,255,255,.15);border:none;color:#fff;width:44px;height:44px;
+  border-radius:50%;font-size:24px;line-height:1;}
+.pv-close{position:absolute;top:calc(12px + var(--safe-top));right:14px;background:rgba(255,255,255,.15);
+  border:none;color:#fff;width:38px;height:38px;border-radius:50%;font-size:16px;}
+.or-sep{display:flex;align-items:center;gap:10px;color:var(--sub);font-size:12px;margin:14px 0 10px;}
+.or-sep::before,.or-sep::after{content:'';flex:1;height:1px;background:var(--line);}
 </style>
 </head>
 <body>
@@ -918,6 +937,7 @@ function renderEdit(){
   hd.querySelector('.id-input').addEventListener('input',e=>{ setFieldValue(house,'nickname',e.target.value); });
   hd.querySelector('.del-btn').addEventListener('click',()=>{
     if(confirm('確定要刪除這筆看房紀錄嗎？此動作無法復原。')){
+      photoRemoveByHouse(house.id).catch(()=>{});
       state.houses=state.houses.filter(h=>h.id!==house.id);
       saveState(true); state.view='list'; state.editingId=null; renderApp();
       showToast('已刪除');
@@ -940,6 +960,7 @@ function renderEdit(){
       b.addEventListener('click',fn); quick.appendChild(b);
     });
   el.appendChild(quick);
+  el.appendChild(renderPhotoBox(house));
 
   SECTIONS.forEach((sec,idx)=>{
     const det=document.createElement('details'); det.className='section';
@@ -1116,14 +1137,17 @@ function openMenu(){
   document.body.appendChild(bd);
 }
 
-function exportJSON(){
-  const payload={exportedAt:new Date().toISOString(), houses:state.houses};
+async function exportJSON(){
+  let photos=[];
+  try{ photos=await photoAll(); }catch(e){}
+  const payload={exportedAt:new Date().toISOString(), houses:state.houses, photos};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const a=document.createElement('a');
   const dateStr=new Date().toISOString().slice(0,10);
   a.href=URL.createObjectURL(blob); a.download=`看房紀錄備份_${dateStr}.json`;
   document.body.appendChild(a); a.click(); a.remove();
-  showToast('已匯出備份檔');
+  const mb=(JSON.stringify(payload).length/1048576).toFixed(1);
+  showToast(`已匯出備份檔（含 ${photos.length} 張照片，約 ${mb} MB）`);
 }
 
 function csvEscape(v){
@@ -1164,6 +1188,12 @@ document.getElementById('fileImport').addEventListener('change',e=>{
       let added=0;
       incoming.forEach(h=>{ if(h&&h.id&&!existingIds.has(h.id)){ state.houses.push(h); added++; } });
       saveState(true); renderApp();
+      // 一併還原備份裡的照片
+      let pn=0;
+      if(Array.isArray(parsed.photos)){
+        Promise.all(parsed.photos.map(p=>(p&&p.id&&p.dataUrl)?photoPut(p).then(()=>pn++).catch(()=>{}):null))
+          .then(()=>{ if(pn) showToast(`已匯入 ${added} 筆紀錄、${pn} 張照片`); });
+      }
       showToast(`已匯入 ${added} 筆新紀錄`);
     }catch(err){ showToast('匯入失敗，檔案格式不正確'); }
   };
@@ -1471,8 +1501,9 @@ function haversine(a,b,c,d){
    只解析「基礎資料／房屋價格／租住說明」這類明確的欄位值。
    刻意不解析「提供設備／家具」清單：591 用刪除線標示未提供的項目，
    複製成純文字後刪除線會消失，照抄會把「無電梯」讀成「有電梯」。   */
-function parse591(text){
-  const raw=String(text||'');
+function parse591(text,srcUrl){
+  const orig=String(text||'');
+  const raw=normalize591(orig);
   const flat=raw.replace(/\s+/g,' ');
   const nf=twNorm(flat);
   const out=[];
@@ -1484,19 +1515,38 @@ function parse591(text){
   };
   const g=(re,i)=>{ const m=nf.match(re); return m?m[i===undefined?1:i]:null; };
 
-  // 縣市與行政區
-  const city=TW_CITIES.find(c=>nf.includes(twNorm(c)));
-  if(city){
-    add('city',city);
-    const dist=(TW_AREAS[city]||[]).find(d=>nf.includes(twNorm(d)));
-    if(dist) add('district',dist);
-  }
-  // 地址
+  // 地址（先解析，行政區以地址為準）
   const addr=g(/地址\s*[:：]\s*([^\s]+)/);
   if(addr) add('address',addr);
+
+  // 縣市與行政區：取「縣市＋行政區」相鄰出現、位置最前面的那一組。
+  // 不能只找單一行政區關鍵字 — 頁面的周邊資訊會有「新北市中和區景新國小」這種
+  // 鄰近學校名稱，會把行政區帶錯。
+  let city=null,dist=null,bestI=Infinity;
+  TW_CITIES.forEach(c=>{
+    const nc=twNorm(c);
+    (TW_AREAS[c]||[]).forEach(d=>{
+      const nd=twNorm(d);
+      const i=nf.indexOf(nc+nd), j=nf.indexOf(nc+' '+nd);
+      const k=Math.min(i<0?Infinity:i, j<0?Infinity:j);
+      if(k<bestI){ bestI=k; city=c; dist=d; }
+    });
+  });
+  // 地址若寫了縣市／行政區，以地址為準
+  const na=twNorm(addr||'');
+  if(na){
+    const c2=TW_CITIES.find(c=>na.includes(twNorm(c)));
+    if(c2) city=c2;
+    if(city){
+      const d2=(TW_AREAS[city]||[]).find(d=>na.includes(twNorm(d)));
+      if(d2) dist=d2;
+    }
+  }
+  if(city) add('city',city);
+  if(dist) add('district',dist);
   // 物件網址
-  const url=raw.match(/https?:\/\/rent\.591\.com\.tw\/\S+/);
-  if(url) add('url',url[0]);
+  const url=srcUrl||((orig.match(/https?:\/\/rent\.591\.com\.tw\/\d+/)||[])[0]);
+  if(url) add('url',url);
 
   // 格局與坪數
   const lay=nf.match(/(\d+)\s*房\s*(\d+)\s*廳\s*(\d+)\s*衛/);
@@ -1548,7 +1598,7 @@ function parse591(text){
   // 聯絡人
   const owner=g(/屋主\s*[:：]\s*([^\s(（]{1,10})/);
   if(owner){ add('contactName',owner); add('contactRole','房東本人','屋主直租'); }
-  const tel=raw.match(/09\d{2}[-\s]?\d{3}[-\s]?\d{3}/);
+  const tel=orig.match(/09\d{2}[-\s]?\d{3}[-\s]?\d{3}/);
   if(tel) add('contactPhone',tel[0]);
 
   // 交通：591 把捷運站和公車站混在一起列，無法從文字分辨，預設不勾
@@ -1559,6 +1609,10 @@ function parse591(text){
     add('mrtDist',metersToMrtDist(near[0].m),`${near[0].m} 公尺 → ${metersToMrtDist(near[0].m)}`,false);
   }
   add('platform','591');
+  // 依解析到的內容自動組一個好認的暱稱
+  const tmp={}; out.forEach(o=>tmp[o.key]=o.value);
+  const nick=autoNickname(tmp);
+  if(nick) add('nickname',nick);
   return out;
 }
 
@@ -1689,32 +1743,56 @@ function open591Dialog(house){
   bd.addEventListener('click',e=>{ if(e.target===bd) bd.remove(); });
   const sheet=document.createElement('div'); sheet.className='modal-sheet'; sheet.style.position='relative';
   sheet.innerHTML=`<button class="modal-close">✕</button>
-    <h2>📋 從 591 貼上自動填入</h2>
-    <div class="menu-desc" style="margin:-8px 0 12px;line-height:1.7">
-      在 591 物件頁面全選複製（電腦 Ctrl/⌘+A → C；手機長按選取全部），回到這裡貼上，
-      會自動解析租金、坪數、格局、樓層、屋齡等欄位，填入前你可以逐項確認。
+    <h2>📋 從 591 匯入</h2>
+    <div class="field"><label>物件網址</label>
+      <input type="text" id="p591Url" inputmode="url" placeholder="https://rent.591.com.tw/21841466"
+             value="${escapeAttr(house.data.url||'')}">
     </div>
-    <div class="field">
-      <textarea id="p591" placeholder="在這裡貼上 591 頁面的文字…" style="min-height:130px"></textarea>
+    <button type="button" id="p591Fetch" style="width:100%;margin-top:4px;padding:13px;border:none;border-radius:12px;
+      background:var(--accent);color:#fff;font-size:15px;font-weight:700;font-family:inherit">用網址匯入</button>
+    <div class="or-sep">網址讀不到時改用這個</div>
+    <div class="field" style="margin-top:0">
+      <textarea id="p591" placeholder="在 591 頁面全選複製，貼在這裡…" style="min-height:90px"></textarea>
     </div>
-    <button type="button" id="p591Go" style="width:100%;margin-top:6px;padding:13px;border:none;border-radius:12px;
-      background:var(--accent);color:#fff;font-size:15px;font-weight:700;font-family:inherit">解析</button>
-    <div class="menu-desc" style="margin-top:10px;line-height:1.7">
+    <button type="button" id="p591Go" style="width:100%;margin-top:4px;padding:12px;border:1px solid var(--accent);
+      border-radius:12px;background:#fff;color:var(--accent);font-size:14.5px;font-weight:700;font-family:inherit">解析貼上的文字</button>
+    <div class="menu-desc" style="margin-top:12px;line-height:1.7">
       ⚠️ 不會解析「提供設備／家具」清單 — 591 用刪除線標示未提供的項目，複製成文字後刪除線會消失，
-      照抄會把「無電梯」讀成「有電梯」。設備請自己在 ⑦ 家具與家電 勾選。
+      照抄會把「無電梯」讀成「有電梯」。設備請自己在 ⑦ 家具與家電 勾選。<br>
+      網址匯入會經過第三方讀取服務（r.jina.ai）取得頁面文字，該服務會看到你查的網址；讀不到時請改用貼上。
     </div>`;
-  sheet.querySelector('.modal-close').addEventListener('click',()=>bd.remove());
-  sheet.querySelector('#p591Go').addEventListener('click',()=>{
-    const txt=sheet.querySelector('#p591').value;
-    if(!txt.trim()){ showToast('請先貼上文字'); return; }
-    const items=parse591(txt);
+
+  const run=(txt,srcUrl)=>{
+    const items=parse591(txt,srcUrl);
+    const pics=extract591Photos(txt);
+    if(pics.length){ house.data._photo591=pics; saveState(true); }
     bd.remove();
     openFillPreview({
       title:'📋 解析結果',
-      subtitle:`解析出 ${items.length} 個欄位，點一下可以取消勾選。`,
+      subtitle:`解析出 ${items.length} 個欄位，點一下可以取消勾選。`+
+        (pics.length?`<br>另外找到 ${pics.length} 張物件照片，填入後可在「📷 照片」按「⬇️ 匯入 591 照片」下載。`:''),
       items, house,
       note:'資料來自 591 刊登內容，僅供參考，現場仍要自己確認。'
     });
+  };
+
+  sheet.querySelector('.modal-close').addEventListener('click',()=>bd.remove());
+  sheet.querySelector('#p591Fetch').addEventListener('click',async ()=>{
+    const u=sheet.querySelector('#p591Url').value.trim();
+    const btn=sheet.querySelector('#p591Fetch');
+    btn.disabled=true; btn.textContent='讀取中…';
+    try{
+      const txt=await fetch591ByUrl(u);
+      run(txt,u.match(/https?:\/\/rent\.591\.com\.tw\/\d+/)[0]);
+    }catch(e){
+      btn.disabled=false; btn.textContent='用網址匯入';
+      showToast(e.message||'讀取失敗');
+    }
+  });
+  sheet.querySelector('#p591Go').addEventListener('click',()=>{
+    const txt=sheet.querySelector('#p591').value;
+    if(!txt.trim()){ showToast('請先貼上文字'); return; }
+    run(txt,null);
   });
   bd.appendChild(sheet); document.body.appendChild(bd);
 }
@@ -1737,6 +1815,239 @@ async function openTransitLookup(house){
   }catch(e){
     showToast(e.message||'查詢失敗，請確認網路連線');
   }
+}
+
+/* =========================================================
+   網址匯入 ＋ 自動命名 ＋ 照片區
+========================================================= */
+
+/* 把 Markdown（網址匯入回來的格式）整理成跟複製貼上一樣好解析 */
+function normalize591(raw){
+  return String(raw||'')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g,' ')       // 圖片語法
+    .replace(/\[([^\]]*)\]\([^)]*\)/g,'$1')     // 連結只留文字
+    .replace(/[*#`>|]/g,' ')                    // Markdown 符號
+    .replace(/地\s*址/g,'地址');                 // 匯入回來會是「地 址」
+}
+
+/* 透過 r.jina.ai 讀取頁面文字（591 本身沒開放跨域，瀏覽器抓不到） */
+async function fetch591ByUrl(url){
+  const u=String(url||'').trim();
+  if(!/^https?:\/\/(rent|sale)\.591\.com\.tw\/\d+/.test(u))
+    throw new Error('請貼上 591 物件網址，例如 https://rent.591.com.tw/21841466');
+  let r;
+  try{ r=await fetch('https://r.jina.ai/'+u,{headers:{'Accept':'text/plain'}}); }
+  catch(e){ throw new Error('連線失敗，請改用「貼上頁面文字」'); }
+  if(!r.ok) throw new Error(`讀取失敗（${r.status}），請改用「貼上頁面文字」`);
+  const txt=await r.text();
+  if(!/坪|租金|元\/月/.test(txt)) throw new Error('讀不到物件內容，請改用「貼上頁面文字」');
+  return txt;
+}
+
+/* 取出這個物件自己的照片（推薦物件的照片要排除） */
+function extract591Photos(raw){
+  const cut=String(raw||'').split(/熱門社區推薦|附近房屋|同租金、同縣市|溫馨提醒/)[0];
+  const urls=[...cut.matchAll(/https:\/\/img\d*\.591\.com\.tw\/house\/[^\s)"'\]]+/g)].map(m=>m[0]);
+  const seen=new Set(),out=[];
+  urls.forEach(u=>{
+    const base=u.split('!')[0];
+    if(seen.has(base)) return;
+    seen.add(base); out.push(u);
+  });
+  return out;
+}
+
+/* 依已填欄位自動組一個好認的暱稱 */
+function autoNickname(d){
+  const p=[];
+  // 用行政區而不是捷運站：591 交通欄的站名可能是公車站，拿來命名會誤導
+  const place=d.district?String(d.district).replace(/[區鄉鎮市]$/,'')
+            :(d.mrt?String(d.mrt).replace(/站$/,''):(d.city||''));
+  if(place) p.push(place);
+  if(d.rent) p.push(Math.round(Number(d.rent)/1000)+'K');
+  if(d.ping) p.push(d.ping+'坪');
+  if(d.floorAt) p.push(d.floorAt+'F');
+  if(d.buildingType) p.push(d.buildingType);
+  return p.join('｜');
+}
+
+/* ---------- 照片：存在 IndexedDB，不佔 localStorage ---------- */
+const PHOTO_DB='houseViewingPhotos',PHOTO_STORE='photos';
+let _photoDB=null;
+function photoDB(){
+  if(_photoDB) return _photoDB;
+  _photoDB=new Promise((res,rej)=>{
+    const rq=indexedDB.open(PHOTO_DB,1);
+    rq.onupgradeneeded=()=>{
+      const db=rq.result;
+      if(!db.objectStoreNames.contains(PHOTO_STORE)){
+        const st=db.createObjectStore(PHOTO_STORE,{keyPath:'id'});
+        st.createIndex('houseId','houseId',{unique:false});
+      }
+    };
+    rq.onsuccess=()=>res(rq.result);
+    rq.onerror=()=>rej(rq.error);
+  });
+  return _photoDB;
+}
+function photoTx(mode){
+  return photoDB().then(db=>db.transaction(PHOTO_STORE,mode).objectStore(PHOTO_STORE));
+}
+function idbReq(r){ return new Promise((res,rej)=>{ r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+
+async function photoPut(rec){ const st=await photoTx('readwrite'); return idbReq(st.put(rec)); }
+async function photoList(houseId){
+  const st=await photoTx('readonly');
+  const all=await idbReq(st.index('houseId').getAll(houseId));
+  return (all||[]).sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt)));
+}
+async function photoAll(){ const st=await photoTx('readonly'); return (await idbReq(st.getAll()))||[]; }
+async function photoRemove(id){ const st=await photoTx('readwrite'); return idbReq(st.delete(id)); }
+async function photoRemoveByHouse(houseId){
+  const list=await photoList(houseId);
+  for(const p of list) await photoRemove(p.id);
+}
+
+/* 壓縮後再存，避免一張照片就吃掉幾 MB */
+function compressImage(src,maxEdge,quality){
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    const isBlob=(src instanceof Blob);
+    const url=isBlob?URL.createObjectURL(src):src;
+    img.onload=()=>{
+      if(isBlob) URL.revokeObjectURL(url);
+      let w=img.naturalWidth,h=img.naturalHeight;
+      const s=Math.min(1,maxEdge/Math.max(w,h));
+      w=Math.max(1,Math.round(w*s)); h=Math.max(1,Math.round(h*s));
+      const c=document.createElement('canvas'); c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      try{ res(c.toDataURL('image/jpeg',quality)); }catch(e){ rej(new Error('圖片處理失敗')); }
+    };
+    img.onerror=()=>{ if(isBlob) URL.revokeObjectURL(url); rej(new Error('圖片讀取失敗')); };
+    img.src=url;
+  });
+}
+
+/* 591 圖片沒開放跨域，透過圖片代理才能存到本機 */
+async function fetch591Image(u){
+  const bare=String(u).replace(/^https?:\/\//,'');
+  const p='https://images.weserv.nl/?url='+encodeURIComponent(bare)+'&w=1600&output=jpg&q=80';
+  const r=await fetch(p);
+  if(!r.ok) throw new Error('圖片下載失敗');
+  return await r.blob();
+}
+
+async function addPhotoFromFile(houseId,file,source){
+  const dataUrl=await compressImage(file,1600,0.78);
+  const rec={id:'p'+Math.random().toString(36).slice(2,10)+Date.now().toString(36),
+    houseId,dataUrl,source:source||'upload',createdAt:new Date().toISOString()};
+  await photoPut(rec);
+  return rec;
+}
+
+/* ---------- 照片區 UI ---------- */
+function renderPhotoBox(house){
+  const det=document.createElement('details'); det.className='section'; det.id='photoSection'; det.open=true;
+  det.innerHTML=`<summary><span>📷 照片</span><span class="chev">▶</span></summary>`;
+  const body=document.createElement('div'); body.className='section-body';
+
+  const row=document.createElement('div'); row.className='chip-row'; row.style.margin='12px 0 10px';
+  const mk=(txt,fn)=>{ const b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=txt; b.addEventListener('click',fn); row.appendChild(b); return b; };
+  mk('📸 拍照',()=>pickPhoto(house,true));
+  mk('🖼️ 從相簿選',()=>pickPhoto(house,false));
+  mk('⬇️ 匯入 591 照片',()=>import591Photos(house));
+  body.appendChild(row);
+
+  const grid=document.createElement('div'); grid.id='photoGrid'; grid.className='photo-grid';
+  body.appendChild(grid);
+  const hint=document.createElement('div'); hint.className='menu-desc'; hint.style.marginTop='8px';
+  hint.textContent='照片存在這支裝置的瀏覽器裡（不會上傳），會一起放進「匯出備份」。';
+  body.appendChild(hint);
+
+  det.appendChild(body);
+  refreshPhotoGrid(house,grid);
+  return det;
+}
+
+async function refreshPhotoGrid(house,gridEl){
+  // 首次渲染時照片區還沒掛進 DOM，所以要能直接收元素
+  const grid=gridEl||document.getElementById('photoGrid');
+  if(!grid) return;
+  let list=[];
+  try{ list=await photoList(house.id); }catch(e){ grid.innerHTML='<div class="menu-desc">這個瀏覽器無法儲存照片</div>'; return; }
+  grid.innerHTML='';
+  if(!list.length){
+    grid.innerHTML='<div class="menu-desc" style="padding:6px 0">還沒有照片。現場用「📸 拍照」邊看邊拍，之後比較時就不會忘記細節。</div>';
+    return;
+  }
+  list.forEach(p=>{
+    const cell=document.createElement('div'); cell.className='photo-cell';
+    cell.innerHTML=`<img src="${p.dataUrl}" alt="">
+      <button class="photo-del" title="刪除">✕</button>
+      ${p.source==='591'?'<span class="photo-tag">591</span>':''}`;
+    cell.querySelector('img').addEventListener('click',()=>openPhotoViewer(list,list.indexOf(p)));
+    cell.querySelector('.photo-del').addEventListener('click',async e=>{
+      e.stopPropagation();
+      if(!confirm('刪除這張照片？')) return;
+      await photoRemove(p.id); refreshPhotoGrid(house); showToast('已刪除');
+    });
+    grid.appendChild(cell);
+  });
+}
+
+function pickPhoto(house,useCamera){
+  const inp=document.createElement('input');
+  inp.type='file'; inp.accept='image/*'; inp.multiple=!useCamera;
+  if(useCamera) inp.capture='environment';
+  inp.style.display='none';
+  document.body.appendChild(inp);
+  inp.addEventListener('change',async ()=>{
+    const files=[...inp.files]; inp.remove();
+    if(!files.length) return;
+    showToast('處理中…');
+    let ok=0;
+    for(const f of files){
+      try{ await addPhotoFromFile(house.id,f,useCamera?'camera':'upload'); ok++; }catch(e){}
+    }
+    refreshPhotoGrid(house);
+    showToast(ok?`已加入 ${ok} 張照片`:'照片加入失敗');
+  });
+  inp.click();
+}
+
+async function import591Photos(house){
+  const urls=house.data._photo591;
+  if(!urls||!urls.length){
+    showToast('請先用「📋 從 591 匯入」讀取物件，才會有照片可以匯入');
+    return;
+  }
+  if(!confirm(`要下載 ${urls.length} 張 591 照片存到這支裝置嗎？`)) return;
+  showToast('下載中…');
+  let ok=0,fail=0;
+  for(const u of urls){
+    try{
+      const blob=await fetch591Image(u);
+      await addPhotoFromFile(house.id,blob,'591');
+      ok++;
+    }catch(e){ fail++; }
+  }
+  refreshPhotoGrid(house);
+  showToast(`已匯入 ${ok} 張${fail?`，${fail} 張失敗`:''}`);
+}
+
+function openPhotoViewer(list,idx){
+  let i=idx;
+  const bd=document.createElement('div'); bd.className='photo-viewer';
+  const render=()=>{ bd.innerHTML=`<img src="${list[i].dataUrl}" alt="">
+    <div class="pv-bar"><button class="pv-prev">‹</button><span>${i+1} / ${list.length}</span><button class="pv-next">›</button></div>
+    <button class="pv-close">✕</button>`;
+    bd.querySelector('.pv-close').addEventListener('click',()=>bd.remove());
+    bd.querySelector('.pv-prev').addEventListener('click',e=>{ e.stopPropagation(); i=(i-1+list.length)%list.length; render(); });
+    bd.querySelector('.pv-next').addEventListener('click',e=>{ e.stopPropagation(); i=(i+1)%list.length; render(); });
+  };
+  render();
+  bd.addEventListener('click',e=>{ if(e.target===bd) bd.remove(); });
+  document.body.appendChild(bd);
 }
 
 /* 註冊 Service Worker：沒網路時也能開啟 App */
