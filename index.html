@@ -295,10 +295,33 @@ const CL=(key,label,items,flag)=>({type:'checklist',key,label,items,flag:!!flag}
 const ST=(key,label,min,max,step,unit)=>({type:'stepper',key,label,min,max,step,unit});
 const TG=(key,label,options,max)=>({type:'tags',key,label,options,max:max||99,allowCustom:true});
 const SEL=(key,label,options)=>({type:'select',key,label,options});
+const SELD=(key,label,optionsFn)=>({type:'select',key,label,options:[],optionsFn});
 const CN=(key,label,options)=>({type:'choicenote',key,label,options});
 
-const DISTRICTS=['中正區','大同區','中山區','松山區','大安區','萬華區','信義區','士林區','北投區','內湖區','南港區','文山區',
-  '板橋區','三重區','中和區','永和區','新莊區','新店區','土城區','蘆洲區','樹林區','汐止區','三峽區','淡水區','五股區','泰山區','林口區','其他'];
+const TW_AREAS={
+'臺北市':['中正區','大同區','中山區','松山區','大安區','萬華區','信義區','士林區','北投區','內湖區','南港區','文山區'],
+'新北市':['板橋區','三重區','中和區','永和區','新莊區','新店區','樹林區','鶯歌區','三峽區','淡水區','汐止區','瑞芳區','土城區','蘆洲區','五股區','泰山區','林口區','深坑區','石碇區','坪林區','三芝區','石門區','八里區','平溪區','雙溪區','貢寮區','金山區','萬里區','烏來區'],
+'桃園市':['桃園區','中壢區','平鎮區','八德區','楊梅區','蘆竹區','大溪區','龍潭區','龜山區','大園區','觀音區','新屋區','復興區'],
+'臺中市':['中區','東區','南區','西區','北區','北屯區','西屯區','南屯區','太平區','大里區','霧峰區','烏日區','豐原區','后里區','石岡區','東勢區','和平區','新社區','潭子區','大雅區','神岡區','大肚區','沙鹿區','龍井區','梧棲區','清水區','大甲區','外埔區','大安區'],
+'臺南市':['中西區','東區','南區','北區','安平區','安南區','永康區','歸仁區','新化區','左鎮區','玉井區','楠西區','南化區','仁德區','關廟區','龍崎區','官田區','麻豆區','佳里區','西港區','七股區','將軍區','學甲區','北門區','新營區','後壁區','白河區','東山區','六甲區','下營區','柳營區','鹽水區','善化區','大內區','山上區','新市區','安定區'],
+'高雄市':['楠梓區','左營區','鼓山區','三民區','鹽埕區','前金區','新興區','苓雅區','前鎮區','旗津區','小港區','鳳山區','大寮區','鳥松區','林園區','仁武區','大樹區','大社區','岡山區','路竹區','橋頭區','梓官區','彌陀區','永安區','燕巢區','田寮區','阿蓮區','茄萣區','湖內區','旗山區','美濃區','內門區','杉林區','甲仙區','六龜區','茂林區','桃源區','那瑪夏區'],
+'基隆市':['仁愛區','信義區','中正區','中山區','安樂區','暖暖區','七堵區'],
+'新竹市':['東區','北區','香山區'],
+'嘉義市':['東區','西區'],
+'新竹縣':['竹北市','竹東鎮','新埔鎮','關西鎮','湖口鄉','新豐鄉','芎林鄉','橫山鄉','北埔鄉','寶山鄉','峨眉鄉','尖石鄉','五峰鄉'],
+'苗栗縣':['苗栗市','頭份市','竹南鎮','後龍鎮','通霄鎮','苑裡鎮','卓蘭鎮','造橋鄉','西湖鄉','頭屋鄉','公館鄉','銅鑼鄉','三義鄉','大湖鄉','獅潭鄉','三灣鄉','南庄鄉','泰安鄉'],
+'彰化縣':['彰化市','員林市','和美鎮','鹿港鎮','溪湖鎮','二林鎮','田中鎮','北斗鎮','花壇鄉','芬園鄉','大村鄉','永靖鄉','伸港鄉','線西鄉','福興鄉','秀水鄉','埔心鄉','埔鹽鄉','大城鄉','芳苑鄉','竹塘鄉','社頭鄉','二水鄉','田尾鄉','埤頭鄉','溪州鄉'],
+'南投縣':['南投市','埔里鎮','草屯鎮','竹山鎮','集集鎮','名間鄉','鹿谷鄉','中寮鄉','魚池鄉','國姓鄉','水里鄉','信義鄉','仁愛鄉'],
+'雲林縣':['斗六市','斗南鎮','虎尾鎮','西螺鎮','土庫鎮','北港鎮','莿桐鄉','林內鄉','古坑鄉','大埤鄉','崙背鄉','二崙鄉','麥寮鄉','臺西鄉','東勢鄉','褒忠鄉','四湖鄉','口湖鄉','水林鄉','元長鄉'],
+'嘉義縣':['太保市','朴子市','布袋鎮','大林鎮','民雄鄉','溪口鄉','新港鄉','六腳鄉','東石鄉','義竹鄉','鹿草鄉','水上鄉','中埔鄉','竹崎鄉','梅山鄉','番路鄉','大埔鄉','阿里山鄉'],
+'屏東縣':['屏東市','潮州鎮','東港鎮','恆春鎮','萬丹鄉','長治鄉','麟洛鄉','九如鄉','里港鄉','鹽埔鄉','高樹鄉','萬巒鄉','內埔鄉','竹田鄉','新埤鄉','枋寮鄉','新園鄉','崁頂鄉','林邊鄉','南州鄉','佳冬鄉','琉球鄉','車城鄉','滿州鄉','枋山鄉','三地門鄉','霧臺鄉','瑪家鄉','泰武鄉','來義鄉','春日鄉','獅子鄉','牡丹鄉'],
+'宜蘭縣':['宜蘭市','羅東鎮','蘇澳鎮','頭城鎮','礁溪鄉','壯圍鄉','員山鄉','冬山鄉','五結鄉','三星鄉','大同鄉','南澳鄉'],
+'花蓮縣':['花蓮市','鳳林鎮','玉里鎮','新城鄉','吉安鄉','壽豐鄉','光復鄉','豐濱鄉','瑞穗鄉','富里鄉','秀林鄉','萬榮鄉','卓溪鄉'],
+'臺東縣':['臺東市','成功鎮','關山鎮','卑南鄉','鹿野鄉','池上鄉','東河鄉','長濱鄉','太麻里鄉','大武鄉','綠島鄉','海端鄉','延平鄉','金峰鄉','達仁鄉','蘭嶼鄉'],
+'澎湖縣':['馬公市','湖西鄉','白沙鄉','西嶼鄉','望安鄉','七美鄉'],
+'金門縣':['金城鎮','金湖鎮','金沙鎮','金寧鄉','烈嶼鄉','烏坵鄉'],
+'連江縣':['南竿鄉','北竿鄉','莒光鄉','東引鄉']};
+const TW_CITIES=Object.keys(TW_AREAS);
 
 /* =========================================================
    SCHEMA
@@ -310,7 +333,8 @@ const SECTIONS=[
   C('platform','刊登平台',['591','樂屋','好房','FB','仲介','其他']),
   T('url','物件網址','貼上連結（選填）'),
   T('address','完整地址'),
-  SEL('district','行政區',DISTRICTS),
+  SEL('city','縣市',TW_CITIES),
+  SELD('district','行政區',h=>TW_AREAS[h.data.city]||[]),
   T('mrt','最近捷運站','輸入或從建議選擇',{list:'mrtStations'}),
   C('mrtDist','距捷運站',['5分鐘內','5-10分鐘','10-15分鐘','15分鐘以上']),
   C('commuteTime','通勤時間（到常去地點）',['10分鐘內','10-20分鐘','20-30分鐘','30分鐘以上']),
@@ -613,12 +637,25 @@ function renderList(){
 /* =========================================================
    RENDER: EDIT VIEW — field renderers
 ========================================================= */
+function getField(key){
+  for(const sec of SECTIONS){ for(const f of sec.fields){ if(f.key===key) return f; } }
+  return null;
+}
 function fieldValue(house,key){ return house.data[key]; }
 function setFieldValue(house,key,val){ house.data[key]=val; saveState(); }
 
+function onSelectChanged(house,key){
+  if(key!=='city') return;
+  // 換縣市時，清掉不屬於新縣市的行政區並重繪那一欄
+  const list=TW_AREAS[house.data.city]||[];
+  if(house.data.district&&!list.includes(house.data.district)){ house.data.district=''; saveState(); }
+  const w=document.querySelector('[data-field-key="district"]');
+  const df=getField('district');
+  if(w&&df) w.replaceWith(renderFieldHTML(house,df));
+}
 function renderFieldHTML(house,f){
   const val=fieldValue(house,f.key);
-  const wrap=document.createElement('div'); wrap.className='field';
+  const wrap=document.createElement('div'); wrap.className='field'; wrap.dataset.fieldKey=f.key;
   const label=document.createElement('label'); label.textContent=f.label; wrap.appendChild(label);
 
   if(f.type==='text'||f.type==='date'||f.type==='time'||f.type==='tel'){
@@ -643,10 +680,13 @@ function renderFieldHTML(house,f){
     wrap.appendChild(ta);
 
   } else if(f.type==='select'){
+    const selOpts=f.optionsFn?f.optionsFn(house):f.options;
     const sel=document.createElement('select');
-    const blank=document.createElement('option'); blank.value=''; blank.textContent='請選擇…'; sel.appendChild(blank);
-    f.options.forEach(opt=>{ const o=document.createElement('option'); o.value=opt; o.textContent=opt; if(val===opt) o.selected=true; sel.appendChild(o); });
-    sel.addEventListener('change',()=>{ setFieldValue(house,f.key,sel.value); toggleOther(); });
+    const blank=document.createElement('option'); blank.value='';
+    blank.textContent=(f.optionsFn&&!selOpts.length)?'請先選擇縣市':'請選擇…';
+    sel.appendChild(blank);
+    selOpts.forEach(opt=>{ const o=document.createElement('option'); o.value=opt; o.textContent=opt; if(val===opt) o.selected=true; sel.appendChild(o); });
+    sel.addEventListener('change',()=>{ setFieldValue(house,f.key,sel.value); toggleOther(); onSelectChanged(house,f.key); });
     wrap.appendChild(sel);
     const otherWrap=document.createElement('div'); otherWrap.className='other-wrap';
     const otherInp=document.createElement('input'); otherInp.type='text'; otherInp.placeholder='請簡短說明';
@@ -892,6 +932,14 @@ function renderEdit(){
     <div class="summary-tile"><div class="val" data-sum="score">${sc===null?'—':(sc+'分')}</div><div class="lbl">系統綜合評分</div></div>
     <div class="summary-tile"><div class="val" data-sum="flag">${redFlagCount(house)}</div><div class="lbl">紅旗警訊</div></div>`;
   el.appendChild(bar);
+
+  const quick=document.createElement('div'); quick.className='chip-row'; quick.style.marginBottom='12px';
+  [['📋 從 591 貼上',()=>open591Dialog(house)],['📍 查附近交通',()=>openTransitLookup(house)]]
+    .forEach(([txt,fn])=>{
+      const b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=txt;
+      b.addEventListener('click',fn); quick.appendChild(b);
+    });
+  el.appendChild(quick);
 
   SECTIONS.forEach((sec,idx)=>{
     const det=document.createElement('details'); det.className='section';
@@ -1203,8 +1251,9 @@ function printFieldHTML(f,d){
     body=`<div class="pf-line"><span>${pfText(v)}</span>${u}</div>`;
   }else if(f.type==='select'){
     // 選項太多（例如行政區）印成一整排會太擠，留空白手寫
-    if(f.options.length>8){ body=`<div class="pf-line">${pfText(v)}</div>`; }
-    else { body=pfOne(f.options,v); wide=pfWide(f.options); }
+    const so=f.optionsFn?f.optionsFn({data:d||{}}):f.options;
+    if(!so.length||so.length>8){ body=`<div class="pf-line">${pfText(v)}</div>`; }
+    else { body=pfOne(so,v); wide=pfWide(so); }
   }else if(f.type==='choice'){
     body=pfOne(f.options,v); wide=pfWide(f.options);
   }else if(f.type==='choicenote'){
@@ -1379,6 +1428,316 @@ function openPrintDialog(){
 }
 
 window.addEventListener('afterprint',()=>{ document.getElementById('printRoot').innerHTML=''; });
+
+/* =========================================================
+   591 貼上解析 ＋ 地址查附近交通
+========================================================= */
+const CN_NUM={'零':0,'一':1,'二':2,'兩':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10,'半':0.5};
+const twNorm=s=>String(s||'').replace(/台/g,'臺');
+
+function cnToNum(s){
+  if(s===undefined||s===null) return NaN;
+  const str=String(s).trim();
+  if(/^[\d.]+$/.test(str)) return Number(str);
+  let n=0,seen=false;
+  for(const ch of str){ if(ch in CN_NUM){ n+=CN_NUM[ch]; seen=true; } }
+  return seen?n:NaN;
+}
+function ageToRange(y){
+  y=Number(y); if(!isFinite(y)) return '';
+  if(y<5) return '5年內';
+  if(y<10) return '5-10年';
+  if(y<20) return '10-20年';
+  if(y<30) return '20-30年';
+  return '30年以上';
+}
+// 直線距離換算步行時間（繞路係數 1.25、時速 80 公尺／分）
+function metersToWalkMin(m){ return (m*1.25)/80; }
+function metersToMrtDist(m){
+  const t=metersToWalkMin(m);
+  if(t<5) return '5分鐘內';
+  if(t<10) return '5-10分鐘';
+  if(t<15) return '10-15分鐘';
+  return '15分鐘以上';
+}
+function haversine(a,b,c,d){
+  const R=6371000,r=x=>x*Math.PI/180;
+  const dLat=r(c-a),dLon=r(d-b);
+  const x=Math.sin(dLat/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dLon/2)**2;
+  return Math.round(2*R*Math.asin(Math.sqrt(x)));
+}
+
+/* ---------- 591 解析 ----------
+   只解析「基礎資料／房屋價格／租住說明」這類明確的欄位值。
+   刻意不解析「提供設備／家具」清單：591 用刪除線標示未提供的項目，
+   複製成純文字後刪除線會消失，照抄會把「無電梯」讀成「有電梯」。   */
+function parse591(text){
+  const raw=String(text||'');
+  const flat=raw.replace(/\s+/g,' ');
+  const nf=twNorm(flat);
+  const out=[];
+  const add=(key,value,display,sure)=>{
+    if(value===undefined||value===null||value===''||(typeof value==='number'&&!isFinite(value))) return;
+    const f=getField(key); if(!f) return;
+    if(out.some(o=>o.key===key)) return;
+    out.push({key,label:f.label,value,display:display===undefined?String(value):display,sure:sure!==false});
+  };
+  const g=(re,i)=>{ const m=nf.match(re); return m?m[i===undefined?1:i]:null; };
+
+  // 縣市與行政區
+  const city=TW_CITIES.find(c=>nf.includes(twNorm(c)));
+  if(city){
+    add('city',city);
+    const dist=(TW_AREAS[city]||[]).find(d=>nf.includes(twNorm(d)));
+    if(dist) add('district',dist);
+  }
+  // 地址
+  const addr=g(/地址\s*[:：]\s*([^\s]+)/);
+  if(addr) add('address',addr);
+  // 物件網址
+  const url=raw.match(/https?:\/\/rent\.591\.com\.tw\/\S+/);
+  if(url) add('url',url[0]);
+
+  // 格局與坪數
+  const lay=nf.match(/(\d+)\s*房\s*(\d+)\s*廳\s*(\d+)\s*衛/);
+  if(lay){ add('rooms',Number(lay[1])); add('livingRooms',Number(lay[2])); add('bathrooms',Number(lay[3])); }
+  const ping=g(/(?:^|\s)([\d.]+)\s*坪/);
+  if(ping) add('ping',Number(ping));
+  const usable=g(/可使用面積\s*([\d.]+)\s*坪/);
+  if(usable) add('pingUsable',Number(usable));
+
+  // 樓層與建物類型
+  const fl=nf.match(/(\d+)\s*F\s*\/\s*(\d+)\s*F/i);
+  if(fl){ add('floorAt',Number(fl[1])); add('floorTotal',Number(fl[2])); }
+  const bt=g(/\d+F\s*\/\s*\d+F\s*(公寓|電梯大樓|華廈|透天厝|別墅|套房)/i);
+  if(bt) add('buildingType',['電梯大樓','華廈','公寓','套房'].includes(bt)?bt:'其他',bt);
+
+  // 屋齡（換算成區間）
+  const age=g(/屋齡\s*([\d.]+)\s*年/);
+  if(age) add('ageRange',ageToRange(age),`${age} 年 → ${ageToRange(age)}`);
+
+  // 電梯：只取「基礎資料」的有／無，設備清單那個不算
+  const ev=g(/電梯\s*(有|無)(?![一-龥])/);
+  if(ev) add('elevator',ev);
+
+  // 陽台
+  const bc=g(/陽台\s*(\d+)\s*陽台/);
+  if(bc) add('balconyCount',Number(bc));
+
+  // 價格
+  const rent=g(/租金\s*([\d,]+)\s*元\s*\/\s*月/);
+  if(rent) add('rent',Number(rent.replace(/,/g,'')));
+  const mg=g(/管理費\s*(無|[\d,]+\s*元)/);
+  if(mg) add('mgmtFee',mg==='無'?0:Number(mg.replace(/[^\d]/g,'')),mg==='無'?'無（0 元）':mg);
+  const dep=g(/押金\s*([一二兩三四五半\d.]+)\s*個?\s*月/);
+  if(dep){ const n=cnToNum(dep); if(isFinite(n)) add('depositMonths',n,`${dep}個月`); }
+  const wf=g(/水費\s*(臺水繳費|包含在租金內|包含在租金|[^\s]{2,6})/);
+  if(wf) add('water',/臺水/.test(wf)?'台水帳單':(/包含|含租/.test(wf)?'含租':'其他'),wf);
+  const ef=g(/電費\s*(臺電繳費|包含在租金內|包含在租金|[^\s]{2,8})/);
+  if(ef) add('electric',/臺電/.test(ef)?'台電帳單':'其他',ef);
+
+  // 租住說明
+  const term=g(/最短租期\s*([^\s]{1,4})/);
+  if(term){ const n=cnToNum(term.replace(/年/,'')); if(n>=1&&n<=3) add('leaseTerm',n+'年',term); }
+  const cook=g(/開伙\s*(可開伙|不可開伙)/);
+  if(cook) add('canCook',cook==='可開伙'?'是':'否',cook);
+  // 刊登寫「可養寵物」只是刊登內容，還沒談定，一律填「需確認」
+  const pet=g(/養寵物\s*(可養寵物|不可養寵物|可議)/);
+  if(pet) add('petAllowed',pet==='不可養寵物'?'不行':'需確認',pet+'（刊登內容，仍需與房東確認）');
+
+  // 聯絡人
+  const owner=g(/屋主\s*[:：]\s*([^\s(（]{1,10})/);
+  if(owner){ add('contactName',owner); add('contactRole','房東本人','屋主直租'); }
+  const tel=raw.match(/09\d{2}[-\s]?\d{3}[-\s]?\d{3}/);
+  if(tel) add('contactPhone',tel[0]);
+
+  // 交通：591 把捷運站和公車站混在一起列，無法從文字分辨，預設不勾
+  const near=[]; const re=/距\s*([^\s]{1,12}站)\s*(\d+)\s*公尺/g; let mm;
+  while((mm=re.exec(nf))) near.push({name:mm[1],m:Number(mm[2])});
+  if(near.length){
+    add('mrt',near[0].name,`${near[0].name}（591 標示 ${near[0].m} 公尺，可能是公車站）`,false);
+    add('mrtDist',metersToMrtDist(near[0].m),`${near[0].m} 公尺 → ${metersToMrtDist(near[0].m)}`,false);
+  }
+  add('platform','591');
+  return out;
+}
+
+/* ---------- 地址 → 附近捷運／公車 ---------- */
+async function lookupTransit(house){
+  const addr=(house.data.address||'').trim();
+  if(!addr) throw new Error('請先填寫「完整地址」再查詢');
+
+  // 門牌號在 OSM 常查不到，逐步放寬到巷、路段
+  const tries=[addr, addr.replace(/\d+號.*$/,''), addr.replace(/\d+弄.*$/,''), addr.replace(/\d+巷.*$/,'')]
+    .map(s=>s.trim()).filter((s,i,a)=>s&&a.indexOf(s)===i);
+  let hit=null,used=null;
+  for(const q of tries){
+    const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=1&countrycodes=tw&accept-language=zh-TW&q='+encodeURIComponent(q));
+    if(!r.ok) continue;
+    const j=await r.json();
+    if(j&&j.length){ hit=j[0]; used=q; break; }
+    await new Promise(s=>setTimeout(s,1100));   // 遵守 Nominatim 每秒 1 次的規範
+  }
+  if(!hit) throw new Error('查不到這個地址的位置，可以試著只填到路名');
+
+  const lat=Number(hit.lat), lon=Number(hit.lon);
+  const q=`[out:json][timeout:25];(`+
+    `node(around:2000,${lat},${lon})["station"="subway"];`+
+    `node(around:2000,${lat},${lon})["railway"="station"];`+
+    `node(around:600,${lat},${lon})["highway"="bus_stop"];);out body;`;
+  const or=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(q)});
+  if(!or.ok) throw new Error('查詢附近站點失敗，請稍後再試');
+  const oj=await or.json();
+
+  const named=(oj.elements||[]).filter(e=>e.tags&&e.tags.name);
+  const withDist=e=>({name:e.tags['name:zh']||e.tags.name,m:haversine(lat,lon,e.lat,e.lon),tags:e.tags});
+  const uniq=arr=>{ const s=new Set(); return arr.filter(x=>s.has(x.name)?false:(s.add(x.name),true)); };
+  const mrt=uniq(named.filter(e=>e.tags.station==='subway'||e.tags.railway==='station').map(withDist)).sort((a,b)=>a.m-b.m);
+  const bus=uniq(named.filter(e=>e.tags.highway==='bus_stop').map(withDist)).sort((a,b)=>a.m-b.m);
+
+  return {lat,lon,used,display:hit.display_name,addr:hit.address||{},mrt,bus};
+}
+
+function transitToItems(res){
+  const items=[];
+  const add=(key,value,display,sure)=>{
+    const f=getField(key); if(!f||value===''||value===undefined) return;
+    items.push({key,label:f.label,value,display:display===undefined?String(value):display,sure:sure!==false});
+  };
+  // 地理編碼順便帶回的縣市／行政區
+  const a=res.addr||{};
+  const cityRaw=a.city||a.county||a.state||'';
+  const city=TW_CITIES.find(c=>twNorm(cityRaw).includes(twNorm(c)));
+  if(city) add('city',city);
+  const distRaw=a.suburb||a.city_district||a.town||a.village||'';
+  if(city){
+    const d=(TW_AREAS[city]||[]).find(x=>twNorm(distRaw).includes(twNorm(x)));
+    if(d) add('district',d);
+  }
+  if(res.mrt.length){
+    const s=res.mrt[0];
+    add('mrt',s.name,`${s.name}（直線 ${s.m} 公尺，步行約 ${Math.round(metersToWalkMin(s.m))} 分）`);
+    add('mrtDist',metersToMrtDist(s.m),`直線 ${s.m} 公尺 → ${metersToMrtDist(s.m)}`);
+  }
+  if(res.bus.length){
+    const b=res.bus[0];
+    const v=b.m<250?'很方便':(b.m<600?'需走一段路':'不清楚');
+    add('busAccess',v,`最近站「${b.name}」直線 ${b.m} 公尺 → ${v}`);
+  }
+  return items;
+}
+
+/* ---------- 共用：填入前的預覽確認 ---------- */
+function openFillPreview(opts){
+  const {title,subtitle,items,house,note}=opts;
+  const bd=document.createElement('div'); bd.className='modal-backdrop';
+  bd.addEventListener('click',e=>{ if(e.target===bd) bd.remove(); });
+  const sheet=document.createElement('div'); sheet.className='modal-sheet'; sheet.style.position='relative';
+
+  if(!items.length){
+    sheet.innerHTML=`<button class="modal-close">✕</button><h2>${title}</h2>
+      <div class="empty-state" style="padding:24px 8px">沒有解析到可以填入的欄位</div>`;
+    sheet.querySelector('.modal-close').addEventListener('click',()=>bd.remove());
+    bd.appendChild(sheet); document.body.appendChild(bd); return;
+  }
+
+  const picked=new Set(items.filter(i=>i.sure).map(i=>i.key));
+  sheet.innerHTML=`<button class="modal-close">✕</button>
+    <h2>${title}</h2>
+    <div class="menu-desc" style="margin:-8px 0 12px;line-height:1.6">${subtitle||''}</div>
+    <div id="fpList" style="max-height:44vh;overflow-y:auto;border:1px solid var(--line);border-radius:10px;padding:4px 10px"></div>
+    ${note?`<div class="menu-desc" style="margin-top:10px;line-height:1.6">${note}</div>`:''}
+    <button type="button" id="fpGo" style="width:100%;margin-top:14px;padding:13px;border:none;border-radius:12px;
+      background:var(--accent);color:#fff;font-size:15px;font-weight:700;font-family:inherit">填入勾選的欄位</button>`;
+
+  const list=sheet.querySelector('#fpList');
+  items.forEach(it=>{
+    const cur=house.data[it.key];
+    const cf=getField(it.key);
+    let hasOld=cur!==undefined&&cur!==null&&cur!=='';
+    // stepper 一渲染就會寫入最小值，等於沒填，不算覆蓋
+    if(hasOld&&cf&&cf.type==='stepper'&&Number(cur)===Number(cf.min)) hasOld=false;
+    if(hasOld&&Array.isArray(cur)&&!cur.length) hasOld=false;
+    const row=document.createElement('div');
+    row.className='checklist-item'+(picked.has(it.key)?' on':'');
+    row.style.alignItems='flex-start';
+    row.innerHTML=`<span class="box" style="margin-top:2px">✓</span>
+      <span style="flex:1"><b>${escapeHtml(it.label)}</b>　${escapeHtml(it.display)}
+      ${hasOld?`<div style="font-size:11.5px;color:var(--red);margin-top:2px">會覆蓋目前的「${escapeHtml(String(cur))}」</div>`:''}
+      ${it.sure===false?`<div style="font-size:11.5px;color:var(--sub);margin-top:2px">不確定，預設不填</div>`:''}</span>`;
+    row.addEventListener('click',()=>{
+      if(picked.has(it.key)) picked.delete(it.key); else picked.add(it.key);
+      row.classList.toggle('on');
+      sheet.querySelector('#fpGo').textContent=`填入勾選的欄位（${picked.size}）`;
+    });
+    list.appendChild(row);
+  });
+  sheet.querySelector('#fpGo').textContent=`填入勾選的欄位（${picked.size}）`;
+  sheet.querySelector('.modal-close').addEventListener('click',()=>bd.remove());
+  sheet.querySelector('#fpGo').addEventListener('click',()=>{
+    let n=0;
+    items.forEach(it=>{ if(picked.has(it.key)){ house.data[it.key]=it.value; n++; } });
+    saveState(true); bd.remove(); renderApp();
+    showToast(n?`已填入 ${n} 個欄位`:'沒有勾選任何欄位');
+  });
+  bd.appendChild(sheet); document.body.appendChild(bd);
+}
+
+/* ---------- 入口：貼上 591 ---------- */
+function open591Dialog(house){
+  const bd=document.createElement('div'); bd.className='modal-backdrop';
+  bd.addEventListener('click',e=>{ if(e.target===bd) bd.remove(); });
+  const sheet=document.createElement('div'); sheet.className='modal-sheet'; sheet.style.position='relative';
+  sheet.innerHTML=`<button class="modal-close">✕</button>
+    <h2>📋 從 591 貼上自動填入</h2>
+    <div class="menu-desc" style="margin:-8px 0 12px;line-height:1.7">
+      在 591 物件頁面全選複製（電腦 Ctrl/⌘+A → C；手機長按選取全部），回到這裡貼上，
+      會自動解析租金、坪數、格局、樓層、屋齡等欄位，填入前你可以逐項確認。
+    </div>
+    <div class="field">
+      <textarea id="p591" placeholder="在這裡貼上 591 頁面的文字…" style="min-height:130px"></textarea>
+    </div>
+    <button type="button" id="p591Go" style="width:100%;margin-top:6px;padding:13px;border:none;border-radius:12px;
+      background:var(--accent);color:#fff;font-size:15px;font-weight:700;font-family:inherit">解析</button>
+    <div class="menu-desc" style="margin-top:10px;line-height:1.7">
+      ⚠️ 不會解析「提供設備／家具」清單 — 591 用刪除線標示未提供的項目，複製成文字後刪除線會消失，
+      照抄會把「無電梯」讀成「有電梯」。設備請自己在 ⑦ 家具與家電 勾選。
+    </div>`;
+  sheet.querySelector('.modal-close').addEventListener('click',()=>bd.remove());
+  sheet.querySelector('#p591Go').addEventListener('click',()=>{
+    const txt=sheet.querySelector('#p591').value;
+    if(!txt.trim()){ showToast('請先貼上文字'); return; }
+    const items=parse591(txt);
+    bd.remove();
+    openFillPreview({
+      title:'📋 解析結果',
+      subtitle:`解析出 ${items.length} 個欄位，點一下可以取消勾選。`,
+      items, house,
+      note:'資料來自 591 刊登內容，僅供參考，現場仍要自己確認。'
+    });
+  });
+  bd.appendChild(sheet); document.body.appendChild(bd);
+}
+
+/* ---------- 入口：查附近交通 ---------- */
+async function openTransitLookup(house){
+  if(!(house.data.address||'').trim()){ showToast('請先填寫「完整地址」'); return; }
+  showToast('查詢中…');
+  try{
+    const res=await lookupTransit(house);
+    const items=transitToItems(res);
+    const mrtList=res.mrt.slice(0,3).map(s=>`${s.name} ${s.m}m`).join('、')||'附近 2 公里內查無捷運站';
+    const busList=res.bus.slice(0,4).map(s=>`${s.name} ${s.m}m`).join('、')||'附近 600 公尺內查無公車站';
+    openFillPreview({
+      title:'📍 附近交通查詢結果',
+      subtitle:`定位：${escapeHtml(res.used)}<br>捷運：${escapeHtml(mrtList)}<br>公車：${escapeHtml(busList)}`,
+      items, house,
+      note:'⚠️ 系統推估值：台灣門牌號在圖資中常查不到，只能定位到路段，誤差可能數百公尺；距離為直線距離換算步行時間，非實際路線。請現場自行確認。<br>圖資來源：OpenStreetMap'
+    });
+  }catch(e){
+    showToast(e.message||'查詢失敗，請確認網路連線');
+  }
+}
 
 /* 註冊 Service Worker：沒網路時也能開啟 App */
 if('serviceWorker' in navigator){
