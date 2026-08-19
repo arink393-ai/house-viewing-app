@@ -1839,6 +1839,11 @@ function pick591Url(s){
   return m?m[0]:'';
 }
 
+/* 網址被訊息軟體截斷時會有殘缺的百分比編碼，decodeURIComponent 會直接丟 URIError */
+function safeDecode(s){
+  try{ return decodeURIComponent(String(s)); }catch(e){ return String(s); }
+}
+
 /* 把各種 591 網址統一還原成物件頁網址 */
 async function resolve591Url(input){
   let u=pick591Url(input);
@@ -1852,7 +1857,7 @@ async function resolve591Url(input){
   // 2) LINE／LIFF 轉址網址，真實網址就放在 url 參數裡，不必連外
   const q=u.match(/[?&]url=([^&]+)/);
   if(q){
-    const m2=decodeURIComponent(q[1]).match(/(?:rent|sale)\.591\.com\.tw\/(\d+)/);
+    const m2=safeDecode(q[1]).match(/(?:rent|sale)\.591\.com\.tw\/(\d+)/);
     if(m2) return 'https://rent.591.com.tw/'+m2[1];
   }
 
@@ -1866,7 +1871,7 @@ async function resolve591Url(input){
       j=await r.json();
     }catch(e){ throw new Error('短網址展開失敗，請改用「貼上頁面文字」'); }
     const fin=(j&&j.data&&j.data.url)||'';
-    const m3=decodeURIComponent(fin).match(/(?:rent|sale)\.591\.com\.tw\/(\d+)/);
+    const m3=safeDecode(fin).match(/(?:rent|sale)\.591\.com\.tw\/(\d+)/);
     if(m3) return 'https://rent.591.com.tw/'+m3[1];
     throw new Error('展不開這個短網址，請改用「貼上頁面文字」');
   }

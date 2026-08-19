@@ -3,7 +3,7 @@
         2) 沒網路（例如在大樓裡收訊差）也能開啟並填寫紀錄
    注意：看房紀錄本身存在 localStorage，不經過這裡，離線填寫一樣會保存。 */
 
-const CACHE = 'house-viewing-v7';
+const CACHE = 'house-viewing-v8';
 const ASSETS = [
   './',
   './index.html',
