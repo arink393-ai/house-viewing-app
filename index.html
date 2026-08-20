@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="看房紀錄">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="description" content="租屋看房用的檢查表：20 大類項目、評分比較、紅旗警訊，資料只存在自己的手機裡。">
+<meta name="description" content="租屋看房用的檢查表：房客找房與房東篩選租客兩種模式，資料只存在自己的手機裡。">
 <title>看房紀錄 App</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -199,6 +199,36 @@ details.section .section-body{padding:4px 14px 14px;border-top:1px solid var(--l
 .save-banner{background:#FFF3DC;color:#8A6416;font-size:11.5px;text-align:center;padding:6px;border-radius:8px;margin-bottom:10px;}
 .score-explain{font-size:11px;color:var(--sub);text-align:center;margin:-8px 0 14px;}
 
+.photo-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line);}
+.photo-item:last-child{border-bottom:none;}
+.photo-thumb{width:56px;height:56px;border-radius:10px;background:#EEF3F5;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;flex-shrink:0;border:1px solid var(--line);}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.photo-thumb .cam-ic{font-size:20px;color:var(--sub);}
+.photo-item-info{flex:1;min-width:0;}
+.photo-item-name{font-size:13.5px;font-weight:600;color:var(--text);}
+.photo-item-status{font-size:11.5px;color:var(--sub);margin-top:2px;}
+.photo-item-status.done{color:var(--green);font-weight:700;}
+
+.photo-compare-item{padding:12px 0;border-bottom:1px dashed var(--line);}
+.photo-compare-item:last-child{border-bottom:none;}
+.photo-compare-item .photo-item-name{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:8px;}
+.photo-thumbs{display:flex;gap:16px;margin-bottom:9px;}
+.photo-thumb-col{text-align:center;}
+.photo-thumb.small{width:64px;height:64px;}
+.photo-thumb-label{font-size:10px;color:var(--sub);margin-top:3px;}
+
+.lightbox-img{max-width:100%;border-radius:12px;display:block;margin:0 auto;max-height:60vh;object-fit:contain;}
+.lightbox-actions{display:flex;gap:8px;margin-top:14px;}
+.lightbox-actions button{flex:1;padding:11px;border-radius:10px;border:none;font-size:13px;font-weight:700;font-family:inherit;}
+.lightbox-actions .retake{background:var(--accent);color:#fff;}
+.lightbox-actions .remove{background:#FBEAEA;color:var(--red);}
+
+.nego-panel{background:linear-gradient(135deg,#EAF6EE,#E3F3E9);border:1px solid #BFE3CC;border-radius:14px;padding:14px;margin-bottom:14px;}
+.nego-panel .title{font-weight:800;color:#2F7A4B;font-size:13px;margin-bottom:6px;}
+.nego-panel .range{font-size:21px;font-weight:800;color:#2F7A4B;}
+.nego-panel .detail{font-size:12px;color:#3E7A56;margin-top:4px;line-height:1.5;}
+
 /* ---------- 紙本列印表格 ---------- */
 #printRoot{display:none;}
 .pf-wrap{color:#000;font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;}
@@ -224,6 +254,12 @@ details.section .section-body{padding:4px 14px 14px;border-top:1px solid var(--l
 .pf-o{white-space:nowrap;}
 .pf-o.on{font-weight:800;}
 .pf-stars{font-size:12pt;letter-spacing:2.5px;line-height:1.3;}
+.pf-moc{display:flex;flex-direction:column;gap:1.2mm;}
+.pf-mocrow{display:grid;grid-template-columns:26mm 1fr 34mm;gap:2mm;align-items:end;
+  break-inside:avoid;page-break-inside:avoid;}
+.pf-mocname{font-size:8.5pt;font-weight:600;}
+.pf-mocrow .pf-opts{font-size:8pt;line-height:1.4;}
+.pf-mocrow .pf-line{min-height:5.5mm;margin:0;}
 .pf-cl{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5mm 3mm;font-size:8.8pt;line-height:1.55;}
 .pf-ci{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .pf-ci.on{font-weight:800;}
@@ -323,6 +359,10 @@ const TG=(key,label,options,max)=>({type:'tags',key,label,options,max:max||99,al
 const SEL=(key,label,options)=>({type:'select',key,label,options});
 const SELD=(key,label,optionsFn)=>({type:'select',key,label,options:[],optionsFn});
 const CN=(key,label,options)=>({type:'choicenote',key,label,options});
+const PT=(key,label,items)=>({type:'phototasks',key,label,items});
+const MOC=(key,label,items,sourceKey)=>({type:'moveoutcompare',key,label,items,sourceKey});
+
+const PHOTO_ITEMS=['全室牆面','地板刮痕','木作／櫥櫃','門窗','浴室','馬桶','流理台','冰箱內外','洗衣機','冷氣外觀與運轉','熱水器','插座','燈具','天花板','壁癌／漏水痕跡','家具原有刮傷','水錶','電錶','鑰匙數量'];
 
 const TW_AREAS={
 '臺北市':['中正區','大同區','中山區','松山區','大安區','萬華區','信義區','士林區','北投區','內湖區','南港區','文山區'],
@@ -406,8 +446,9 @@ const TENANT_SECTIONS=[
 ]},
 {id:'s5',title:'⑤ 噪音與環境',fields:[
   S('scoreSoundproof','關窗後隔音'), S('scoreOpenNoise','開窗噪音'),
-  M('noisesHeard','現場聽到的聲音（可複選）',['車流聲','捷運聲','飛機聲','鄰居聲音','樓上腳步聲','水管聲','電梯聲','宮廟／學校／市場聲音']),
+  M('noisesHeard','現場聽到的聲音（可複選）',['車流聲','捷運聲','飛機聲','鄰居聲音','樓上腳步聲','水管聲','電梯聲','宮廟／學校／市場聲音','施工／都更噪音']),
   C('nightNoise','晚上可能吵嗎',['低','中','高']),
+  C('nearbyConstruction','附近是否有工地／都更',['無','有，但目前不吵','有，明顯吵','不確定，需向房東確認']),
 ]},
 {id:'s6',title:'⑥ 冷氣',fields:[
   C('acLivingBrand','客廳冷氣品牌',['大金','日立','三菱','國產品牌','LG','不確定','沒有安裝']),
@@ -424,14 +465,18 @@ const TENANT_SECTIONS=[
 ]},
 {id:'s7',title:'⑦ 家具與家電',fields:[
   C('furnishStatus','出租狀態',['空屋','半家具','全家具']),
+  C('clutterLevel','看房當下屋況整潔',['已清空乾淨','有少量雜物','雜物很多需大清理']),
+  TG('itemsToRemove','需要搬走的家具／雜物（可複選）',['沙發','床墊','衣櫃','書桌','雜物箱','舊家電']),
   C('fridge','冰箱',['有','無']), C('fridgeSize','冰箱大小',['小','中','大']),
   C('washer','洗衣機',['有','無']), C('washerType','洗衣機類型',['直立式','滾筒式']), C('washerLoc','洗衣機位置',['室內','陽台']),
+  C('washerDrain','洗衣機排水',['正常','沒有排水／需確認','未安裝排水管','不適用']),
   C('waterHeaterType','熱水器類型',['天然瓦斯','電熱水器','瓦斯桶']),
   C('waterHeaterLoc','熱水器位置',['室內','室外']),
   M('appliances','其他家電家具（可複選）',['瓦斯爐','抽油煙機','烘碗機','微波爐','飲水機／淨水器','電視','沙發','餐桌','床架','床墊','衣櫃','書桌','鞋櫃']),
   C('removeFurniture','不需要的家具可否搬走',['可以','不行','需談','不適用']),
 ]},
 {id:'s8',title:'⑧ 水壓、排水與衛浴',fields:[
+  C('bathroomHygiene','看房當下衛生狀況',['乾淨','普通','明顯不乾淨（例如馬桶未沖乾淨）']),
   C('waterPressure','水壓',['強','正常','弱']),
   C('hotSpeed','熱水速度',['快','正常','慢']),
   C('hotStable','水溫穩定',['是','否']),
@@ -445,6 +490,7 @@ const TENANT_SECTIONS=[
   C('canCook','可開伙',['是','否']),
   C('kitchenGas','天然瓦斯',['有','無']),
   C('kitchenSpace','料理空間',['大','普通','小']),
+  C('rangeHoodCondition','抽油煙機狀況',['正常','老舊有異音','故障','不適用']),
   S('scoreCounter','流理台狀況'), S('scoreCabinet','櫥櫃狀況'),
 ]},
 {id:'s10',title:'⑩ 陽台與曬衣',fields:[
@@ -505,25 +551,35 @@ const TENANT_SECTIONS=[
   CN('cleanRequirement','退租清潔要求',['需專業清潔','基本清潔即可','未提及／需確認']),
   CN('restoreScope','恢復原狀範圍',['需恢復原狀','正常耗損不追究','未提及／需確認']),
 ]},
-{id:'s16',title:'⑯ 入住前一定要拍照的地方',fields:[
-  CL('photoChecklist','拍照清單',['全室牆面','地板刮痕','木作／櫥櫃','門窗','浴室','馬桶','流理台','冰箱內外','洗衣機','冷氣外觀與運轉','熱水器','插座','燈具','天花板','壁癌／漏水痕跡','家具原有刮傷','水錶','電錶','鑰匙數量']),
+{id:'s16',title:'⑯ 社會住宅資訊',fields:[
+  C('socialHousing','是否為社會住宅',['是','否','不確定，需向房東／仲介確認']),
+  C('socialHousingOperator','承辦／管理單位',['地方政府直營','包租代管業者','不確定']),
+  C('socialHousingIdentity','申請資格身份別',['一般戶','弱勢／優先身份（如低收入戶、新婚、育有未成年子女等）','不適用／不確定']),
+  C('socialHousingIncomeCheck','是否需審查收入與財產',['需要','不需要','不確定']),
+  CN('socialHousingRentSubsidy','租金是否有政府補助／優惠',['有補助／優惠租金','無補助，市價出租','不確定']),
+  C('socialHousingLeaseTerm','社會住宅契約年限',['3年','另有規定','不確定']),
+  CN('socialHousingRenewRule','續約／資格複審規定',['定期複審資格','到期需重新申請','不確定']),
+  TG('socialHousingDocs','需要準備的文件（可複選）',['戶籍謄本','所得清單','財產清單','切結書']),
 ]},
-{id:'s17',title:'⑰ 現場紅旗 🚩',fields:[
-  CL('redFlags','紅旗警訊',['不願提供房東身分或授權','催促當場匯訂金','不願提供契約預覽','不願把「可養貓」寫入契約','租金與刊登不一致','額外費用很多','電費計算方式不透明','修繕責任全部推給房客','房東表示可隨時進屋','要求不合理高額違約金','漏水／壁癌','明顯霉味','排水有問題','水壓過弱','冷氣老舊','家電無法正常使用','鄰居／環境噪音明顯','頂樓過熱或疑似漏水','寵物條件說法模糊'],true),
+{id:'s17',title:'⑰ 入住前一定要拍照的地方',fields:[
+  PT('photoChecklist','入住前拍照點交（拍照即自動打勾）',PHOTO_ITEMS),
 ]},
-{id:'s18',title:'⑱ 看完房子的第一印象',fields:[
+{id:'s18',title:'⑱ 現場紅旗 🚩',fields:[
+  CL('redFlags','紅旗警訊',['不願提供房東身分或授權','催促當場匯訂金','不願提供契約預覽','不願把「可養貓」寫入契約','租金與刊登不一致','額外費用很多','電費計算方式不透明','修繕責任全部推給房客','房東表示可隨時進屋','要求不合理高額違約金','漏水／壁癌','明顯霉味','排水有問題','水壓過弱','冷氣老舊','家電無法正常使用','鄰居／環境噪音明顯','頂樓過熱或疑似漏水','寵物條件說法模糊','附近有工地／都更噪音明顯','屋內雜物量大需大清理','看房時衛浴明顯不乾淨（如馬桶未沖）'],true),
+]},
+{id:'s19',title:'⑲ 看完房子的第一印象',fields:[
   C('wouldRentNow','如果現在有人跟我搶，我會不會想立刻租？',['會','可能','不會']),
   TG('like3','最喜歡的幾件事（建議挑1-3個）',['採光佳','空間夠大','地點方便','生活機能好','房東好溝通','租金合理','格局方正','通風良好','有電梯','公設整潔','寵物友善','屋況新','很安靜','家具家電齊全'],3),
   TG('mind3','最介意的幾件事（建議挑1-3個）',['租金偏高','距離較遠','屋況老舊','噪音明顯','收納空間不足','廚房太小','無電梯','西曬嚴重','寵物受限','房東態度不佳','格局奇怪','採光不足','潮濕悶熱','頂樓過熱','需自備家具'],3),
   CN('dailyBother','有沒有哪個缺點是住進去後每天都會困擾我的？',['西曬悶熱','噪音','漏水壁癌疑慮','收納不足','通勤時間長','無特別困擾']),
 ]},
-{id:'s19',title:'⑲ 最終評分',fields:[
+{id:'s20',title:'⑳ 最終評分',fields:[
   S('scoreLocation','地點交通'), S('scoreRentValue','租金價格'), S('scoreLayout','坪數格局'),
   S('scoreLight','採光通風'), S('scoreQuiet','安靜程度'), S('scoreCondition','屋況'),
   S('scoreEquip','設備'), S('scorePetFriendly','寵物友善'), S('scoreLandlord','房東／仲介'),
   S('scoreContract','契約安全'), S('scoreLife','生活機能'), S('scoreOverall','整體感受'),
 ]},
-{id:'s20',title:'⑳ 下一步',fields:[
+{id:'s21',title:'㉑ 下一步',fields:[
   C('status','目前狀態',['未看房','已預約','已看房','考慮中','第二順位','準備簽約','淘汰']),
   C('seeAgain','是否要再看第二次',['是','否']),
   TG('askMoreTags','需要再詢問（可複選）',['水電計費方式','寵物條款','違約金條件','房東真實身分','契約完整內容','修繕責任歸屬','可否設籍','押金明細','其他費用']),
@@ -531,6 +587,17 @@ const TENANT_SECTIONS=[
   CN('lastContactReply','對方最新回覆',['已同意調整','拒絕','還在考慮中／未回覆']),
   C('decision','我的決定',['❤️ 第一順位','🧡 可以考慮','💛 備選','🩶 不適合']),
   TG('decisionReasonTags','決定原因（可複選）',['分數最高','紅旗最少','房東最好溝通','租金最划算','地點最方便','唯一可以養貓','家具家電齊全','屋況最新']),
+]},
+{id:'s22',title:'㉒ 退租確認',fields:[
+  D('moveOutDate','退租日期'),
+  N('finalWaterMeter','退租時水錶度數'),
+  N('finalElectricMeter','退租時電錶度數'),
+  CN('cleaningDone','退租清潔狀況',['已完成專業清潔','已自行清潔','未清潔']),
+  MOC('moveOutPhotoChecklist','退租拍照比對（與入住點交照片比較）',PHOTO_ITEMS,'photoChecklist'),
+  N('depositReturned','實際退還押金（$）'),
+  TA('deductionReason','押金扣款原因（如有，選填）'),
+  C('disputeStatus','退租是否有爭議',['無爭議，順利退還','有爭議，協商中','有爭議，未解決']),
+  TA('moveOutNote','其他備註'),
 ]},
 ];
 const TENANT_SCORE_KEYS=['scoreLocation','scoreRentValue','scoreLayout','scoreLight','scoreQuiet','scoreCondition','scoreEquip','scorePetFriendly','scoreLandlord','scoreContract','scoreLife','scoreOverall'];
@@ -577,6 +644,8 @@ const LANDLORD_SECTIONS=[
   ST('petCount','寵物數量',0,5,1,'隻'),
   C('smoker','是否吸菸',['否','會在室外抽','是']),
   M('specialRequests','特殊需求（可複選）',['要車位','要能開伙','要能設籍','要提前解約條款','其他']),
+  C('socialHousingProgram','是否透過社會住宅包租代管方案出租',['是','否']),
+  CN('socialHousingRule','方案相關規定',['已了解承租資格限制','尚未確認','不適用']),
 ]},
 {id:'l4',title:'④ 看房當天印象',fields:[
   C('punctual','是否準時',['準時','稍微遲到','遲到很多','沒有出現']),
@@ -594,7 +663,21 @@ const LANDLORD_SECTIONS=[
   C('creditCheck','是否同意提供信用查詢／聯徵',['同意','不同意','未提及']),
   CN('previousRentalHistory','過去租屋經驗',['穩定，無糾紛','曾有糾紛','無先前租屋經驗','未詳談']),
 ]},
-{id:'l7',title:'⑦ 決定',fields:[
+{id:'l7',title:'⑦ 入住點交（拍照）',fields:[
+  PT('photoChecklist','入住點交拍照（拍照即自動打勾，適用於已決定出租的租客）',PHOTO_ITEMS),
+]},
+{id:'l8',title:'⑧ 退租確認',fields:[
+  D('moveOutDate','退租日期'),
+  N('finalWaterMeter','退租時水錶度數'),
+  N('finalElectricMeter','退租時電錶度數'),
+  CN('cleaningDone','退租清潔狀況',['房客已完成專業清潔','房客已自行清潔','未清潔']),
+  MOC('moveOutPhotoChecklist','退租拍照比對（與入住點交照片比較）',PHOTO_ITEMS,'photoChecklist'),
+  N('depositReturned','實際退還押金（$）'),
+  TA('deductionReason','押金扣款原因（如有，選填）'),
+  C('disputeStatus','退租是否有爭議',['無爭議，順利退還','有爭議，協商中','有爭議，未解決']),
+  TA('moveOutNote','其他備註'),
+]},
+{id:'l9',title:'⑨ 決定',fields:[
   C('status','目前狀態',['已聯繫','已看房','考慮中','已簽約','婉拒']),
   C('decision','我的決定',['✅ 願意出租','🤔 考慮中','❌ 不考慮']),
   TG('decisionReasonTags','決定原因（可複選）',['財力穩定','態度良好','需求條件符合','有疑慮見紅旗','已有更適合人選','準時可靠','溝通良好']),
@@ -637,13 +720,22 @@ function loadState(){
   }catch(e){ storageOK=false; }
 }
 let saveTimer=null;
+let quotaWarned=false;
 function saveState(immediate){
   const doSave=()=>{
     try{
       localStorage.setItem(STORAGE_KEYS[state.mode], JSON.stringify(state.data[state.mode]));
       localStorage.setItem(MODE_KEY, state.mode);
-      storageOK=true;
-    }catch(e){ storageOK=false; }
+      storageOK=true; quotaWarned=false;
+    }catch(e){
+      storageOK=false;
+      // 照片是存在紀錄裡的，寫不進去等於剛剛那張沒保住。
+      // 原本只有列表頁一行小字，操作當下完全沒感覺，容易整批遺失。
+      if(!quotaWarned){
+        quotaWarned=true;
+        try{ showToast('⚠️ 儲存空間已滿，剛剛的變更沒有存到！請先「匯出備份」再刪掉一些照片'); }catch(_){}
+      }
+    }
   };
   if(immediate){ doSave(); return; }
   clearTimeout(saveTimer);
@@ -690,6 +782,81 @@ function landlordFinalScore(r){
   return clamp100(base-flagPenalty+punctualAdj+incomeAdj+vibeAdj);
 }
 function finalScore(r){ return state.mode==='landlord'?landlordFinalScore(r):tenantFinalScore(r); }
+
+function negotiationAdvice(score,rent){
+  if(score===null||score===undefined||!rent) return null;
+  let lo,hi,label;
+  if(score>=85){ lo=0; hi=3; label='條件不錯，議價空間有限，可改著重非租金條件（如免仲介費、送家具、緩衝入住日）。'; }
+  else if(score>=70){ lo=3; hi=6; label='略有缺點，可嘗試小幅議價。'; }
+  else if(score>=55){ lo=6; hi=12; label='缺點較明顯，建議積極議價。'; }
+  else if(score>=40){ lo=12; hi=18; label='缺點不少，建議大幅議價，或要求房東先改善再簽約。'; }
+  else { lo=18; hi=25; label='問題嚴重，建議大幅議價，或考慮直接放棄這間。'; }
+  const targetHi=Math.round(rent*(1-lo/100));
+  const targetLo=Math.round(rent*(1-hi/100));
+  return {lo,hi,label,targetLo,targetHi};
+}
+function renderNegoPanel(box,house){
+  const nego=negotiationAdvice(finalScore(house), Number(house.data.rent)||0);
+  if(!nego){ box.style.display='none'; box.innerHTML=''; return; }
+  box.style.display='block'; box.className='nego-panel';
+  box.innerHTML=`<div class="title">💰 議價建議</div>
+    <div class="range">建議議價 ${nego.lo}%－${nego.hi}%</div>
+    <div class="detail">以目前租金換算，約可談到 $${nego.targetLo.toLocaleString()}－$${nego.targetHi.toLocaleString()}／月</div>
+    <div class="detail">${nego.label}</div>`;
+}
+
+/* ---- photo capture helpers ---- */
+function compressImage(file, maxDim, quality){
+  maxDim=maxDim||900; quality=quality||0.55;
+  return new Promise((resolve,reject)=>{
+    function draw(imgSrc,w,h){
+      try{
+        let tw=w, th=h;
+        if(tw>maxDim||th>maxDim){ if(tw>th){ th=Math.round(th*maxDim/tw); tw=maxDim; } else { tw=Math.round(tw*maxDim/th); th=maxDim; } }
+        const canvas=document.createElement('canvas'); canvas.width=tw; canvas.height=th;
+        const ctx=canvas.getContext('2d'); ctx.drawImage(imgSrc,0,0,tw,th);
+        resolve(canvas.toDataURL('image/jpeg',quality));
+      }catch(e){ reject(e); }
+    }
+    function fallback(){
+      const reader=new FileReader();
+      reader.onload=()=>{
+        const img=new Image();
+        img.onload=()=>draw(img,img.naturalWidth,img.naturalHeight);
+        img.onerror=()=>reject(new Error('image load failed'));
+        img.src=reader.result;
+      };
+      reader.onerror=()=>reject(new Error('file read failed'));
+      reader.readAsDataURL(file);
+    }
+    if('createImageBitmap' in window){
+      createImageBitmap(file,{imageOrientation:'from-image'}).then(bmp=>draw(bmp,bmp.width,bmp.height)).catch(fallback);
+    } else fallback();
+  });
+}
+function refreshAllInThumbs(){
+  const house=curRecords().find(h=>h.id===state.editingId);
+  if(!house) return;
+  document.querySelectorAll('.in-thumb[data-source-key]').forEach(el=>{
+    const sk=el.dataset.sourceKey, it=el.dataset.item;
+    const src=(house.data[sk]||{})[it]||{};
+    el.innerHTML=src.photo?`<img src="${src.photo}">`:'<span class="cam-ic">—</span>';
+  });
+}
+function openPhotoLightbox(url,onRetake,onRemove){
+  const bd=document.createElement('div'); bd.className='modal-backdrop'; bd.style.alignItems='center'; bd.style.padding='24px';
+  bd.addEventListener('click',e=>{ if(e.target===bd) bd.remove(); });
+  const sheet=document.createElement('div'); sheet.className='modal-sheet'; sheet.style.borderRadius='18px'; sheet.style.position='relative';
+  sheet.innerHTML=`<button class="modal-close">✕</button><img class="lightbox-img" src="${url}">`;
+  sheet.querySelector('.modal-close').addEventListener('click',()=>bd.remove());
+  if(onRetake||onRemove){
+    const actions=document.createElement('div'); actions.className='lightbox-actions';
+    if(onRetake){ const b=document.createElement('button'); b.type='button'; b.className='retake'; b.textContent='重新拍攝'; b.addEventListener('click',()=>{ bd.remove(); onRetake(); }); actions.appendChild(b); }
+    if(onRemove){ const b=document.createElement('button'); b.type='button'; b.className='remove'; b.textContent='移除照片'; b.addEventListener('click',()=>{ bd.remove(); onRemove(); }); actions.appendChild(b); }
+    sheet.appendChild(actions);
+  }
+  bd.appendChild(sheet); document.body.appendChild(bd);
+}
 
 function tenantTopTags(r,ctx){
   const tags=[];
@@ -834,7 +1001,6 @@ function setFieldValue(house,key,val){ house.data[key]=val; saveState(); }
 
 function onSelectChanged(house,key){
   if(key!=='city') return;
-  // 換縣市時清掉不屬於新縣市的行政區並重繪那一欄
   const list=TW_AREAS[house.data.city]||[];
   if(house.data.district&&!list.includes(house.data.district)){ house.data.district=''; saveState(); }
   const w=document.querySelector('[data-field-key="district"]');
@@ -1071,6 +1237,147 @@ function renderFieldHTML(house,f){
       list.appendChild(row);
     });
     wrap.appendChild(list);
+
+  } else if(f.type==='phototasks'){
+    wrap.removeChild(label);
+    let data=fieldValue(house,f.key);
+    if(Array.isArray(data)){
+      const migrated={}; data.forEach(name=>{ migrated[name]={photo:null,ts:null}; });
+      data=migrated; setFieldValue(house,f.key,data);
+    }
+    if(!data||typeof data!=='object') data={};
+    const lbl2=document.createElement('label');
+    function countDone(){ const d=fieldValue(house,f.key)||{}; return f.items.filter(it=>d[it]&&d[it].photo).length; }
+    lbl2.textContent=f.label+`（已拍照 ${countDone()}/${f.items.length}）`;
+    wrap.appendChild(lbl2);
+    const list=document.createElement('div');
+    f.items.forEach(item=>{
+      const row=document.createElement('div'); row.className='photo-item';
+      const entry=(fieldValue(house,f.key)||{})[item]||{photo:null};
+      const thumb=document.createElement('div'); thumb.className='photo-thumb';
+      thumb.innerHTML=entry.photo?`<img src="${entry.photo}">`:'<span class="cam-ic">📷</span>';
+      const info=document.createElement('div'); info.className='photo-item-info';
+      info.innerHTML=`<div class="photo-item-name">${escapeHtml(item)}</div><div class="photo-item-status${entry.photo?' done':''}">${entry.photo?'✓ 已拍照':'待拍照，點一下拍照'}</div>`;
+      row.appendChild(thumb); row.appendChild(info);
+      const fileInp=document.createElement('input'); fileInp.type='file'; fileInp.accept='image/*'; fileInp.capture='environment'; fileInp.style.display='none';
+      row.appendChild(fileInp);
+      function refreshRow(){
+        const d2=(fieldValue(house,f.key)||{})[item]||{};
+        thumb.innerHTML=d2.photo?`<img src="${d2.photo}">`:'<span class="cam-ic">📷</span>';
+        const st=info.querySelector('.photo-item-status');
+        st.textContent=d2.photo?'✓ 已拍照':'待拍照，點一下拍照';
+        st.classList.toggle('done',!!d2.photo);
+        lbl2.textContent=f.label+`（已拍照 ${countDone()}/${f.items.length}）`;
+      }
+      fileInp.addEventListener('change',async()=>{
+        const file=fileInp.files[0]; if(!file) return;
+        showToast('處理照片中…');
+        try{
+          const dataUrl=await compressImage(file);
+          const cur=fieldValue(house,f.key)||{};
+          cur[item]={photo:dataUrl, ts:new Date().toISOString()};
+          setFieldValue(house,f.key,cur);
+          refreshRow();
+          refreshAllInThumbs();
+          showToast('已儲存照片，自動打勾完成');
+        }catch(e){ showToast('照片處理失敗，請再試一次'); }
+        fileInp.value='';
+      });
+      thumb.addEventListener('click',()=>{
+        const d2=(fieldValue(house,f.key)||{})[item]||{};
+        if(d2.photo){
+          openPhotoLightbox(d2.photo, ()=>fileInp.click(), ()=>{
+            const cur=fieldValue(house,f.key)||{}; delete cur[item]; setFieldValue(house,f.key,cur); refreshRow(); refreshAllInThumbs();
+          });
+        } else fileInp.click();
+      });
+      info.addEventListener('click',()=>{ if(!((fieldValue(house,f.key)||{})[item]||{}).photo) fileInp.click(); });
+      list.appendChild(row);
+    });
+    wrap.appendChild(list);
+
+  } else if(f.type==='moveoutcompare'){
+    wrap.removeChild(label);
+    const lbl2=document.createElement('label');
+    function tally(){
+      const d=fieldValue(house,f.key)||{};
+      const n=f.items.filter(it=>d[it]&&d[it].photo).length;
+      const ch=f.items.filter(it=>d[it]&&(d[it].status==='有新增磨損／損壞'||d[it].status==='需說明')).length;
+      return {n,ch};
+    }
+    const t0=tally();
+    lbl2.textContent=f.label+`（已比對 ${t0.n}/${f.items.length}，${t0.ch} 項有異動）`;
+    wrap.appendChild(lbl2);
+    const list=document.createElement('div');
+    f.items.forEach(item=>{
+      const row=document.createElement('div'); row.className='photo-compare-item';
+      const sourceData=fieldValue(house,f.sourceKey)||{};
+      const inEntry=sourceData[item]||{};
+      const outEntry=(fieldValue(house,f.key)||{})[item]||{};
+      row.innerHTML=`<div class="photo-item-name">${escapeHtml(item)}</div>
+        <div class="photo-thumbs">
+          <div class="photo-thumb-col"><div class="photo-thumb small in-thumb" data-source-key="${escapeAttr(f.sourceKey)}" data-item="${escapeAttr(item)}">${inEntry.photo?`<img src="${inEntry.photo}">`:'<span class="cam-ic">—</span>'}</div><div class="photo-thumb-label">入住時</div></div>
+          <div class="photo-thumb-col"><div class="photo-thumb small out-thumb">${outEntry.photo?`<img src="${outEntry.photo}">`:'<span class="cam-ic">📷</span>'}</div><div class="photo-thumb-label">退租時</div></div>
+        </div>
+        <div class="chip-row compare-status"></div>
+        <div class="note-wrap${outEntry.note?' show':''}"><input type="text" placeholder="說明（選填）" value="${escapeAttr(outEntry.note||'')}"></div>`;
+      const fileInp=document.createElement('input'); fileInp.type='file'; fileInp.accept='image/*'; fileInp.capture='environment'; fileInp.style.display='none';
+      row.appendChild(fileInp);
+      const outThumb=row.querySelector('.out-thumb');
+      const inThumb=row.querySelector('.in-thumb');
+      function refreshOut(){
+        const d2=(fieldValue(house,f.key)||{})[item]||{};
+        outThumb.innerHTML=d2.photo?`<img src="${d2.photo}">`:'<span class="cam-ic">📷</span>';
+        const t=tally();
+        lbl2.textContent=f.label+`（已比對 ${t.n}/${f.items.length}，${t.ch} 項有異動）`;
+      }
+      fileInp.addEventListener('change',async()=>{
+        const file=fileInp.files[0]; if(!file) return;
+        showToast('處理照片中…');
+        try{
+          const dataUrl=await compressImage(file);
+          const cur=fieldValue(house,f.key)||{};
+          cur[item]={...(cur[item]||{}), photo:dataUrl};
+          setFieldValue(house,f.key,cur);
+          refreshOut();
+          showToast('已儲存退租照片');
+        }catch(e){ showToast('照片處理失敗，請再試一次'); }
+        fileInp.value='';
+      });
+      outThumb.addEventListener('click',()=>{
+        const d2=(fieldValue(house,f.key)||{})[item]||{};
+        if(d2.photo) openPhotoLightbox(d2.photo, ()=>fileInp.click(), ()=>{ const cur=fieldValue(house,f.key)||{}; delete cur[item]; setFieldValue(house,f.key,cur); refreshOut(); });
+        else fileInp.click();
+      });
+      inThumb.addEventListener('click',()=>{
+        const liveSrc=(fieldValue(house,f.sourceKey)||{})[item]||{};
+        if(liveSrc.photo) openPhotoLightbox(liveSrc.photo);
+      });
+      const statusRow=row.querySelector('.compare-status');
+      const noteWrap=row.querySelector('.note-wrap');
+      ['狀況相符','有新增磨損／損壞','需說明'].forEach(opt=>{
+        const chip=document.createElement('button'); chip.type='button';
+        chip.className='chip'+(outEntry.status===opt?' on':''); chip.textContent=opt;
+        chip.addEventListener('click',()=>{
+          const cur=fieldValue(house,f.key)||{};
+          const nowVal=(cur[item]&&cur[item].status===opt)?'':opt;
+          cur[item]={...(cur[item]||{}), status:nowVal};
+          setFieldValue(house,f.key,cur);
+          statusRow.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+          if(nowVal) chip.classList.add('on');
+          noteWrap.classList.toggle('show', nowVal==='有新增磨損／損壞'||nowVal==='需說明');
+          const t=tally(); lbl2.textContent=f.label+`（已比對 ${t.n}/${f.items.length}，${t.ch} 項有異動）`;
+        });
+        statusRow.appendChild(chip);
+      });
+      noteWrap.querySelector('input').addEventListener('input',(e)=>{
+        const cur=fieldValue(house,f.key)||{};
+        cur[item]={...(cur[item]||{}), note:e.target.value};
+        setFieldValue(house,f.key,cur);
+      });
+      list.appendChild(row);
+    });
+    wrap.appendChild(list);
   }
   return wrap;
 }
@@ -1093,6 +1400,8 @@ function refreshSummaryBar(house){
   const sc=finalScore(house);
   bar.querySelector('[data-sum="score"]').textContent = sc===null?'—':(sc+'分');
   bar.querySelector('[data-sum="flag"]').textContent = redFlagCount(house);
+  const negoBox=document.getElementById('negoPanel');
+  if(negoBox) renderNegoPanel(negoBox,house);
 }
 
 function renderEdit(){
@@ -1127,6 +1436,10 @@ function renderEdit(){
   el.appendChild(bar);
 
   if(state.mode==='tenant'){
+    const negoBox=document.createElement('div'); negoBox.id='negoPanel';
+    el.appendChild(negoBox);
+    renderNegoPanel(negoBox,house);
+
     const quick=document.createElement('div'); quick.className='chip-row'; quick.style.marginBottom='12px';
     [['📋 從 591 匯入',()=>open591Dialog(house)],['📍 查附近交通',()=>openTransitLookup(house)]]
       .forEach(([txt,fn])=>{
@@ -1419,7 +1732,7 @@ document.getElementById('btnMenu').addEventListener('click',openMenu);
    空白版：現場手寫用；已填版：把某筆紀錄印出來
 ========================================================= */
 const PRINT_ESSENTIAL={
-  tenant:['s2','s3','s4','s5','s8','s9','s10','s11','s17','s19'],
+  tenant:['s2','s3','s4','s5','s8','s9','s10','s11','s18','s20'],   // s18 現場紅旗、s20 最終評分
   landlord:['l1','l2','l3','l4','l5'],
 };
 let printOpts={mode:'blank',houseId:null,sections:[]};
@@ -1478,6 +1791,26 @@ function printFieldHTML(f,d){
   }else if(f.type==='textarea'){
     const t=pfText(v);
     body=(filled&&t)?`<div class="pf-ta">${t}</div>`:'<div class="pf-line"></div><div class="pf-line"></div>';
+    wide=true;
+  }else if(f.type==='phototasks'){
+    // 紙本上就是一份拍照對照表，拍完一項打一個勾
+    const d2=(v&&typeof v==='object'&&!Array.isArray(v))?v:{};
+    body='<div class="pf-cl">'+f.items.map(it=>{
+      const done=filled&&d2[it]&&d2[it].photo;
+      return `<span class="pf-ci${done?' on':''}">${done?'☑':'☐'} ${escapeHtml(it)}</span>`;
+    }).join('')+'</div>';
+    wide=true;
+  }else if(f.type==='moveoutcompare'){
+    // 退租比對：每項留下狀況圈選與說明欄，方便現場與房東一起確認
+    const d2=(v&&typeof v==='object'&&!Array.isArray(v))?v:{};
+    const STATUS=['狀況相符','有新增磨損／損壞','需說明'];
+    body='<div class="pf-moc">'+f.items.map(it=>{
+      const e=d2[it]||{};
+      const opts=STATUS.map(s=>`<span class="pf-o${e.status===s?' on':''}">${e.status===s?'●':'○'} ${escapeHtml(s)}</span>`).join('');
+      return `<div class="pf-mocrow"><span class="pf-mocname">${escapeHtml(it)}</span>`+
+             `<span class="pf-opts">${opts}</span>`+
+             `<span class="pf-line pf-note">${filled?pfText(e.note):''}</span></div>`;
+    }).join('')+'</div>';
     wide=true;
   }else if(f.type==='checklist'){
     const arr=Array.isArray(v)?v:[];
@@ -2138,26 +2471,6 @@ async function photoRemoveByHouse(houseId){
   for(const p of list) await photoRemove(p.id);
 }
 
-/* 壓縮後再存，避免一張照片就吃掉幾 MB */
-function compressImage(src,maxEdge,quality){
-  return new Promise((res,rej)=>{
-    const img=new Image();
-    const isBlob=(src instanceof Blob);
-    const url=isBlob?URL.createObjectURL(src):src;
-    img.onload=()=>{
-      if(isBlob) URL.revokeObjectURL(url);
-      let w=img.naturalWidth,h=img.naturalHeight;
-      const s=Math.min(1,maxEdge/Math.max(w,h));
-      w=Math.max(1,Math.round(w*s)); h=Math.max(1,Math.round(h*s));
-      const c=document.createElement('canvas'); c.width=w; c.height=h;
-      c.getContext('2d').drawImage(img,0,0,w,h);
-      try{ res(c.toDataURL('image/jpeg',quality)); }catch(e){ rej(new Error('圖片處理失敗')); }
-    };
-    img.onerror=()=>{ if(isBlob) URL.revokeObjectURL(url); rej(new Error('圖片讀取失敗')); };
-    img.src=url;
-  });
-}
-
 /* 591 圖片沒開放跨域，透過圖片代理才能存到本機 */
 async function fetch591Image(u){
   const bare=String(u).replace(/^https?:\/\//,'');
@@ -2185,7 +2498,6 @@ function renderPhotoBox(house){
   const mk=(txt,fn)=>{ const b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=txt; b.addEventListener('click',fn); row.appendChild(b); return b; };
   mk('📸 拍照',()=>pickPhoto(house,true));
   mk('🖼️ 從相簿選',()=>pickPhoto(house,false));
-  // 591 照片只有房客模式用得到，篩選租客沒有物件可匯入
   if(state.mode==='tenant') mk('⬇️ 匯入 591 照片',()=>import591Photos(house));
   body.appendChild(row);
 
