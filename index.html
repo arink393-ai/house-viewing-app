@@ -268,12 +268,29 @@ details.section .section-body{padding:4px 14px 14px;border-top:1px solid var(--l
   display:flex;justify-content:space-between;}
 
 @media print{
-  html,body{height:auto !important;background:#fff !important;overflow:visible !important;}
+  html,body{height:auto !important;min-height:0 !important;background:#fff !important;overflow:visible !important;}
   body{display:block !important;}
-  body>*{display:none !important;}
-  body>#printRoot{display:block !important;}
-  .pf-sech{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   @page{size:A4;margin:11mm 9mm 9mm;}
+
+  /* (A) 直接用瀏覽器列印（Cmd+P、iOS 分享→列印）：印出目前畫面 */
+  #printRoot{display:none !important;}
+  header{position:static !important;background:none !important;color:var(--accent-dark) !important;padding:0 0 10px !important;}
+  header .btn-icon,.mode-switch,.searchbar,.compare-controls,.fab,nav.bottomnav,#fileImport,.toast{display:none !important;}
+  /* 只有在螢幕上才有意義的操作鈕，紙本上是雜訊 */
+  .edit-header .back,.edit-header .del-btn,.quick-actions,.photo-actions,
+  .photo-del,.note-toggle,.tags-custom-wrap{display:none !important;}
+  main{overflow:visible !important;height:auto !important;padding:0 !important;}
+  details.section{break-inside:avoid;page-break-inside:avoid;box-shadow:none !important;border:1px solid var(--line) !important;}
+  details.section summary{cursor:default;}
+  details.section summary .chev{display:none !important;}
+  details.section>*:not(summary){display:block !important;}   /* 收合的區塊也要印出來 */
+  .field input,.field textarea,.field select{background:#fff !important;border:1px solid var(--line) !important;}
+  .top-pick-card,.nego-panel,.photo-item,.photo-cell{break-inside:avoid;}
+
+  /* (B) 從選單「列印紙本表格」：只印排版好的表格，蓋掉上面的畫面列印 */
+  body.printing-form>*{display:none !important;}
+  body.printing-form>#printRoot{display:block !important;}
+  .pf-sech{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 }
 
 /* ---------- 照片區 ---------- */
@@ -1456,7 +1473,7 @@ function renderEdit(){
     el.appendChild(negoBox);
     renderNegoPanel(negoBox,house);
 
-    const quick=document.createElement('div'); quick.className='chip-row'; quick.style.marginBottom='12px';
+    const quick=document.createElement('div'); quick.className='chip-row quick-actions'; quick.style.marginBottom='12px';
     [['📋 從 591 匯入',()=>open591Dialog(house)],['📍 查附近交通',()=>openTransitLookup(house)]]
       .forEach(([txt,fn])=>{
         const b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=txt;
@@ -1884,6 +1901,7 @@ function estimatePages(){
 
 function doPrint(){
   document.getElementById('printRoot').innerHTML=buildPrintHTML();
+  document.body.classList.add('printing-form');
   window.print();
 }
 
@@ -1986,7 +2004,10 @@ function openPrintDialog(){
   refresh();
 }
 
-window.addEventListener('afterprint',()=>{ document.getElementById('printRoot').innerHTML=''; });
+window.addEventListener('afterprint',()=>{
+  document.body.classList.remove('printing-form');
+  document.getElementById('printRoot').innerHTML='';
+});
 
 /* =========================================================
    591 貼上解析 ＋ 地址查附近交通
@@ -2571,7 +2592,7 @@ function renderPhotoBox(house){
   det.innerHTML=`<summary><span>📷 照片</span><span class="chev">▶</span></summary>`;
   const body=document.createElement('div'); body.className='section-body';
 
-  const row=document.createElement('div'); row.className='chip-row'; row.style.margin='12px 0 10px';
+  const row=document.createElement('div'); row.className='chip-row photo-actions'; row.style.margin='12px 0 10px';
   const mk=(txt,fn)=>{ const b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=txt; b.addEventListener('click',fn); row.appendChild(b); return b; };
   mk('📸 拍照',()=>pickPhoto(house,true));
   mk('🖼️ 從相簿選',()=>pickPhoto(house,false));
