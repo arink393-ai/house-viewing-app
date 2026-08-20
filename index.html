@@ -840,7 +840,7 @@ function refreshAllInThumbs(){
   document.querySelectorAll('.in-thumb[data-source-key]').forEach(el=>{
     const sk=el.dataset.sourceKey, it=el.dataset.item;
     const src=(house.data[sk]||{})[it]||{};
-    el.innerHTML=src.photo?`<img src="${src.photo}">`:'<span class="cam-ic">—</span>';
+    setTaskThumb(el,src.photo,'<span class="cam-ic">—</span>');
   });
 }
 function openPhotoLightbox(url,onRetake,onRemove){
@@ -1255,7 +1255,7 @@ function renderFieldHTML(house,f){
       const row=document.createElement('div'); row.className='photo-item';
       const entry=(fieldValue(house,f.key)||{})[item]||{photo:null};
       const thumb=document.createElement('div'); thumb.className='photo-thumb';
-      thumb.innerHTML=entry.photo?`<img src="${entry.photo}">`:'<span class="cam-ic">📷</span>';
+      setTaskThumb(thumb,entry.photo,'<span class="cam-ic">📷</span>');
       const info=document.createElement('div'); info.className='photo-item-info';
       info.innerHTML=`<div class="photo-item-name">${escapeHtml(item)}</div><div class="photo-item-status${entry.photo?' done':''}">${entry.photo?'✓ 已拍照':'待拍照，點一下拍照'}</div>`;
       row.appendChild(thumb); row.appendChild(info);
@@ -1263,7 +1263,7 @@ function renderFieldHTML(house,f){
       row.appendChild(fileInp);
       function refreshRow(){
         const d2=(fieldValue(house,f.key)||{})[item]||{};
-        thumb.innerHTML=d2.photo?`<img src="${d2.photo}">`:'<span class="cam-ic">📷</span>';
+        setTaskThumb(thumb,d2.photo,'<span class="cam-ic">📷</span>');
         const st=info.querySelector('.photo-item-status');
         st.textContent=d2.photo?'✓ 已拍照':'待拍照，點一下拍照';
         st.classList.toggle('done',!!d2.photo);
@@ -1275,7 +1275,8 @@ function renderFieldHTML(house,f){
         try{
           const dataUrl=await compressImage(file);
           const cur=fieldValue(house,f.key)||{};
-          cur[item]={photo:dataUrl, ts:new Date().toISOString()};
+          await taskPhotoDel((cur[item]||{}).photo);   // 重拍時把舊的清掉，不留孤兒
+          cur[item]={photo:await taskPhotoPut(house.id,dataUrl), ts:new Date().toISOString()};
           setFieldValue(house,f.key,cur);
           refreshRow();
           refreshAllInThumbs();
@@ -1286,8 +1287,13 @@ function renderFieldHTML(house,f){
       thumb.addEventListener('click',()=>{
         const d2=(fieldValue(house,f.key)||{})[item]||{};
         if(d2.photo){
-          openPhotoLightbox(d2.photo, ()=>fileInp.click(), ()=>{
-            const cur=fieldValue(house,f.key)||{}; delete cur[item]; setFieldValue(house,f.key,cur); refreshRow(); refreshAllInThumbs();
+          taskPhotoGet(d2.photo).then(url=>{
+            if(!url){ fileInp.click(); return; }
+            openPhotoLightbox(url, ()=>fileInp.click(), async ()=>{
+              const cur=fieldValue(house,f.key)||{};
+              await taskPhotoDel((cur[item]||{}).photo);
+              delete cur[item]; setFieldValue(house,f.key,cur); refreshRow(); refreshAllInThumbs();
+            });
           });
         } else fileInp.click();
       });
@@ -1316,8 +1322,8 @@ function renderFieldHTML(house,f){
       const outEntry=(fieldValue(house,f.key)||{})[item]||{};
       row.innerHTML=`<div class="photo-item-name">${escapeHtml(item)}</div>
         <div class="photo-thumbs">
-          <div class="photo-thumb-col"><div class="photo-thumb small in-thumb" data-source-key="${escapeAttr(f.sourceKey)}" data-item="${escapeAttr(item)}">${inEntry.photo?`<img src="${inEntry.photo}">`:'<span class="cam-ic">—</span>'}</div><div class="photo-thumb-label">入住時</div></div>
-          <div class="photo-thumb-col"><div class="photo-thumb small out-thumb">${outEntry.photo?`<img src="${outEntry.photo}">`:'<span class="cam-ic">📷</span>'}</div><div class="photo-thumb-label">退租時</div></div>
+          <div class="photo-thumb-col"><div class="photo-thumb small in-thumb" data-source-key="${escapeAttr(f.sourceKey)}" data-item="${escapeAttr(item)}"></div><div class="photo-thumb-label">入住時</div></div>
+          <div class="photo-thumb-col"><div class="photo-thumb small out-thumb"></div><div class="photo-thumb-label">退租時</div></div>
         </div>
         <div class="chip-row compare-status"></div>
         <div class="note-wrap${outEntry.note?' show':''}"><input type="text" placeholder="說明（選填）" value="${escapeAttr(outEntry.note||'')}"></div>`;
@@ -1325,9 +1331,11 @@ function renderFieldHTML(house,f){
       row.appendChild(fileInp);
       const outThumb=row.querySelector('.out-thumb');
       const inThumb=row.querySelector('.in-thumb');
+      setTaskThumb(inThumb,inEntry.photo,'<span class="cam-ic">—</span>');
+      setTaskThumb(outThumb,outEntry.photo,'<span class="cam-ic">📷</span>');
       function refreshOut(){
         const d2=(fieldValue(house,f.key)||{})[item]||{};
-        outThumb.innerHTML=d2.photo?`<img src="${d2.photo}">`:'<span class="cam-ic">📷</span>';
+        setTaskThumb(outThumb,d2.photo,'<span class="cam-ic">📷</span>');
         const t=tally();
         lbl2.textContent=f.label+`（已比對 ${t.n}/${f.items.length}，${t.ch} 項有異動）`;
       }
@@ -1337,7 +1345,8 @@ function renderFieldHTML(house,f){
         try{
           const dataUrl=await compressImage(file);
           const cur=fieldValue(house,f.key)||{};
-          cur[item]={...(cur[item]||{}), photo:dataUrl};
+          await taskPhotoDel((cur[item]||{}).photo);
+          cur[item]={...(cur[item]||{}), photo:await taskPhotoPut(house.id,dataUrl)};
           setFieldValue(house,f.key,cur);
           refreshOut();
           showToast('已儲存退租照片');
@@ -1346,12 +1355,19 @@ function renderFieldHTML(house,f){
       });
       outThumb.addEventListener('click',()=>{
         const d2=(fieldValue(house,f.key)||{})[item]||{};
-        if(d2.photo) openPhotoLightbox(d2.photo, ()=>fileInp.click(), ()=>{ const cur=fieldValue(house,f.key)||{}; delete cur[item]; setFieldValue(house,f.key,cur); refreshOut(); });
+        if(d2.photo) taskPhotoGet(d2.photo).then(url=>{
+          if(!url){ fileInp.click(); return; }
+          openPhotoLightbox(url, ()=>fileInp.click(), async ()=>{
+            const cur=fieldValue(house,f.key)||{};
+            await taskPhotoDel((cur[item]||{}).photo);
+            delete cur[item]; setFieldValue(house,f.key,cur); refreshOut();
+          });
+        });
         else fileInp.click();
       });
       inThumb.addEventListener('click',()=>{
         const liveSrc=(fieldValue(house,f.sourceKey)||{})[item]||{};
-        if(liveSrc.photo) openPhotoLightbox(liveSrc.photo);
+        if(liveSrc.photo) taskPhotoGet(liveSrc.photo).then(url=>{ if(url) openPhotoLightbox(url); });
       });
       const statusRow=row.querySelector('.compare-status');
       const noteWrap=row.querySelector('.note-wrap');
@@ -2466,6 +2482,67 @@ async function photoList(houseId){
 }
 async function photoAll(){ const st=await photoTx('readonly'); return (await idbReq(st.getAll()))||[]; }
 async function photoRemove(id){ const st=await photoTx('readwrite'); return idbReq(st.delete(id)); }
+/* ---------- 點交／退租照片 ----------
+   紀錄裡只留參照，影像本體放 IndexedDB。
+   點交一筆最多 19+19 張，全部塞進 localStorage 會超過 iOS Safari 約 5MB 的上限。 */
+const TASK_REF='idb:';
+async function photoGet(id){ const st=await photoTx('readonly'); return idbReq(st.get(id)); }
+async function taskPhotoPut(recordId,dataUrl){
+  const id='t'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+  await photoPut({id,houseId:recordId,dataUrl,source:'task',createdAt:new Date().toISOString()});
+  return TASK_REF+id;
+}
+async function taskPhotoGet(ref){
+  if(!ref) return null;
+  const s=String(ref);
+  if(!s.startsWith(TASK_REF)) return s;              // 舊資料本來就是 dataURL
+  try{ const rec=await photoGet(s.slice(TASK_REF.length)); return rec?rec.dataUrl:null; }
+  catch(e){ return null; }
+}
+async function taskPhotoDel(ref){
+  const s=String(ref||'');
+  if(s.startsWith(TASK_REF)){ try{ await photoRemove(s.slice(TASK_REF.length)); }catch(e){} }
+}
+/* 縮圖要先去 IndexedDB 取回影像，所以是非同步填入 */
+function setTaskThumb(el,ref,empty){
+  if(!el) return;
+  el.innerHTML=empty;
+  if(!ref) return;
+  taskPhotoGet(ref).then(url=>{ if(url) el.innerHTML='<img src="'+url+'">'; });
+}
+/* 把舊版存在紀錄裡的行內照片搬進 IndexedDB，騰出 localStorage */
+/* 遷移會同時改到兩個模式的資料，必須兩邊都寫回，
+   否則沒寫回的那邊下次開啟又會被重搬一次，IndexedDB 會累積重複照片 */
+function saveAllModes(){
+  try{
+    localStorage.setItem(STORAGE_KEYS.tenant, JSON.stringify(state.data.tenant));
+    localStorage.setItem(STORAGE_KEYS.landlord, JSON.stringify(state.data.landlord));
+    storageOK=true;
+  }catch(e){ storageOK=false; }
+}
+async function migrateTaskPhotos(){
+  let moved=0;
+  for(const mode of ['tenant','landlord']){
+    for(const rec of (state.data[mode]||[])){
+      for(const sec of MODE_CFG[mode].sections){
+        for(const f of sec.fields){
+          if(f.type!=='phototasks'&&f.type!=='moveoutcompare') continue;
+          const d=rec.data[f.key];
+          if(!d||typeof d!=='object'||Array.isArray(d)) continue;
+          for(const item of Object.keys(d)){
+            const e=d[item];
+            if(e&&typeof e.photo==='string'&&e.photo.startsWith('data:')){
+              try{ e.photo=await taskPhotoPut(rec.id,e.photo); moved++; }catch(err){}
+            }
+          }
+        }
+      }
+    }
+  }
+  if(moved){ saveAllModes(); showToast('已把 '+moved+' 張點交照片移到大容量儲存區'); }
+  return moved;
+}
+
 async function photoRemoveByHouse(houseId){
   const list=await photoList(houseId);
   for(const p of list) await photoRemove(p.id);
@@ -2600,6 +2677,7 @@ if('serviceWorker' in navigator){
 
 loadState();
 renderApp();
+migrateTaskPhotos().catch(()=>{});
 </script>
 </body>
 </html>
