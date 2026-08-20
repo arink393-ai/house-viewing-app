@@ -48,6 +48,11 @@ header .btn-icon{background:rgba(255,255,255,.18);border:none;color:#fff;border-
   width:36px;height:36px;font-size:18px;display:flex;align-items:center;justify-content:center;}
 header .hdr-right{display:flex;gap:8px;}
 
+.mode-switch{display:flex;background:#fff;border-bottom:1px solid var(--line);padding:8px 12px;gap:8px;flex-shrink:0;z-index:4;}
+.mode-switch button{flex:1;border:1px solid var(--line);background:#F7F9FA;color:var(--sub);border-radius:10px;
+  padding:9px 6px;font-size:13px;font-weight:700;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;}
+.mode-switch button.active{background:var(--accent-dark);border-color:var(--accent-dark);color:#fff;}
+
 main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px calc(90px + var(--safe-bottom));}
 
 nav.bottomnav{
@@ -156,7 +161,6 @@ details.section .section-body{padding:4px 14px 14px;border-top:1px solid var(--l
 
 .top-badge{margin-top:4px;font-size:11.5px;color:var(--accent);font-weight:700;}
 
-/* ---------- compare view ---------- */
 .compare-controls{display:flex;gap:8px;margin-bottom:12px;}
 .compare-controls select{flex:1;border:1px solid var(--line);border-radius:10px;padding:8px;font-size:13px;
   background:#fff;color:var(--text);font-family:inherit;}
@@ -178,7 +182,6 @@ details.section .section-body{padding:4px 14px 14px;border-top:1px solid var(--l
 .top-pick-row .tags span{font-size:10.5px;background:rgba(138,100,22,.12);color:#8A6416;padding:2px 7px;border-radius:20px;}
 .top-pick-row .n{font-weight:800;font-size:16px;color:#8A6416;flex-shrink:0;}
 
-/* ---------- modal ---------- */
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:50;display:flex;align-items:flex-end;}
 .modal-sheet{background:#fff;width:100%;border-radius:18px 18px 0 0;padding:18px 18px calc(24px + var(--safe-bottom));
   max-height:80vh;overflow-y:auto;}
@@ -260,15 +263,20 @@ details.section .section-body{padding:4px 14px 14px;border-top:1px solid var(--l
 <body>
 
 <header>
-  <h1>🏠 看房紀錄</h1>
+  <h1><span id="appTitle">🏠 看房紀錄</span></h1>
   <div class="hdr-right">
     <button class="btn-icon" id="btnMenu">⋯</button>
   </div>
 </header>
 
+<div class="mode-switch" id="modeSwitch">
+  <button data-mode="tenant" class="mode-btn">🏠 房客模式（找房）</button>
+  <button data-mode="landlord" class="mode-btn">🔑 房東模式（篩選房客）</button>
+</div>
+
 <main id="main"></main>
 
-<button class="fab" id="fabAdd" title="新增看房紀錄">＋</button>
+<button class="fab" id="fabAdd" title="新增紀錄">＋</button>
 
 <nav class="bottomnav">
   <button data-view="list" class="navbtn"><span class="ic">🏘️</span><span>列表</span></button>
@@ -281,7 +289,6 @@ details.section .section-body{padding:4px 14px 14px;border-top:1px solid var(--l
 <div id="printRoot"></div>
 
 <datalist id="mrtStations">
-<!-- 常見捷運站，僅供輸入建議，仍可自行輸入任何站名 -->
 <option value="台北車站"><option value="中山"><option value="民權西路"><option value="雙連">
 <option value="大安"><option value="大安森林公園"><option value="信義安和"><option value="市政府">
 <option value="國父紀念館"><option value="忠孝復興"><option value="忠孝敦化"><option value="忠孝新生">
@@ -343,9 +350,9 @@ const TW_AREAS={
 const TW_CITIES=Object.keys(TW_AREAS);
 
 /* =========================================================
-   SCHEMA
+   TENANT SCHEMA（房客模式：看房紀錄）
 ========================================================= */
-const SECTIONS=[
+const TENANT_SECTIONS=[
 {id:'s1',title:'① 基本資料',fields:[
   T('nickname','物件暱稱','例：頂溪25K三房'),
   D('viewDate','看房日期'), TM('viewTime','看房時間'),
@@ -526,30 +533,117 @@ const SECTIONS=[
   TG('decisionReasonTags','決定原因（可複選）',['分數最高','紅旗最少','房東最好溝通','租金最划算','地點最方便','唯一可以養貓','家具家電齊全','屋況最新']),
 ]},
 ];
-const SCORE_KEYS=['scoreLocation','scoreRentValue','scoreLayout','scoreLight','scoreQuiet','scoreCondition','scoreEquip','scorePetFriendly','scoreLandlord','scoreContract','scoreLife','scoreOverall'];
+const TENANT_SCORE_KEYS=['scoreLocation','scoreRentValue','scoreLayout','scoreLight','scoreQuiet','scoreCondition','scoreEquip','scorePetFriendly','scoreLandlord','scoreContract','scoreLife','scoreOverall'];
+
+const TENANT_HELP=[
+  {cat:'費用', qs:['水電怎麼計費？夏天電費是不是特別貴？','管理費包含哪些項目？垃圾費另外算嗎？','網路要自己申辦還是已經有？','押金退還的條件跟時間？']},
+  {cat:'設備', qs:['客廳／房間冷氣是變頻還是傳統？大概幾年了？','熱水器是瓦斯還是電的？在室內還室外？','家具家電哪些是原本就有的？可以搬走不要的嗎？','壞掉的話是房東還是房客負責維修？']},
+  {cat:'寵物', qs:['可以養貓嗎？可以白紙黑字寫進租約嗎？','有沒有寵物押金或月費？','對品種、數量、體型有限制嗎？']},
+  {cat:'契約與安全', qs:['可以先看契約草稿嗎？','提前解約的違約金怎麼算？','房東可以隨便進來嗎？需不需要事先約？','可以報稅／可以設籍嗎？']},
+  {cat:'房東／房仲', qs:['可以直接跟房東本人聯絡嗎？','之前的房客為什麼搬走？','附近晚上吵不吵？（觀察對方回答會不會閃躲）']},
+];
+
+const TENANT_CSV_COLS=[['nickname','一句話辨識'],['address','完整地址'],['district','行政區'],['viewDate','看房日期'],
+  ['rent','月租'],['mgmtFee','管理費'],['ping','坪數'],['rooms','房'],['livingRooms','廳'],['bathrooms','衛'],
+  ['floorAt','所在樓層'],['floorTotal','共幾層'],['elevator','電梯'],
+  ['furnishStatus','出租狀態'],['acLivingType','客廳冷氣類型'],['petAllowed','可養貓'],
+  ['status','目前狀態'],['decision','我的決定']];
+
+/* =========================================================
+   LANDLORD SCHEMA（房東模式：租客篩選）
+========================================================= */
+const LANDLORD_SECTIONS=[
+{id:'l1',title:'① 租客基本資料',fields:[
+  T('nickname','姓名／稱呼','例：王小姐'),
+  D('viewDate','看房／聯繫日期'), TM('viewTime','時間'),
+  TEL('contactPhone','電話'), T('contactLine','LINE'),
+  C('source','從哪裡聯繫',['591','實價登錄','朋友介紹','路過詢問','仲介','其他']),
+  ST('occupants','預計入住人數',1,8,1,'人'),
+  C('relationship','入住者關係',['個人','夫妻／情侶','家人','朋友／室友','公司承租','其他']),
+]},
+{id:'l2',title:'② 職業與財力',fields:[
+  C('occupation','職業類別',['上班族','公務員／教師','學生','自由業','經商／老闆','其他']),
+  T('company','公司／學校名稱（選填）'),
+  C('incomeProof','可否提供在職／收入證明',['可以','需要再問','無法提供']),
+  C('studentProof','可否提供在學證明（如為學生）',['可以','不適用','無法提供']),
+  C('guarantor','保證人狀況',['已有保證人','可提供保證人','沒有保證人']),
+  C('paymentMethod','希望的付款方式',['轉帳','現金','其他']),
+]},
+{id:'l3',title:'③ 租屋需求',fields:[
+  C('leaseTermWanted','希望租期',['1年','2年','短期（未滿1年）','不確定']),
+  D('moveInDate','希望入住日期'),
+  N('budget','預算（每月$）'),
+  C('petPlan','是否有寵物',['無','有貓','有狗','其他寵物']),
+  ST('petCount','寵物數量',0,5,1,'隻'),
+  C('smoker','是否吸菸',['否','會在室外抽','是']),
+  M('specialRequests','特殊需求（可複選）',['要車位','要能開伙','要能設籍','要提前解約條款','其他']),
+]},
+{id:'l4',title:'④ 看房當天印象',fields:[
+  C('punctual','是否準時',['準時','稍微遲到','遲到很多','沒有出現']),
+  S('scorePolite','禮貌程度'),
+  S('scoreCommunication','溝通清楚度'),
+  S('scoreQuestionQuality','提問是否切題合理'),
+  C('negotiate','是否殺價',['沒有','小幅議價','強力砍價']),
+  C('overallVibe','整體感覺',['很好','普通','有點怪','不放心']),
+  TG('impressionTags','對這位租客的印象（可複選）',['講話有禮貌','很乾脆','問很多細節','感覺很急','態度不錯','有點強勢','含糊其辭','很誠懇']),
+]},
+{id:'l5',title:'⑤ 需要留意的狀況 🚩',fields:[
+  CL('redFlags','租客紅旗警訊',['不願意提供身分證件','收入來源說不清楚','急著簽約卻不太看房屋細節','要求用現金且不開收據','寵物數量與描述不符','過去曾被房東要求搬離（自述）','信用有瑕疵（自己提到）','無法提供任何證明文件','要求分期繳房租','有意分租／轉租','聯絡方式經常更換'],true),
+]},
+{id:'l6',title:'⑥ 信用與租屋經驗',fields:[
+  C('creditCheck','是否同意提供信用查詢／聯徵',['同意','不同意','未提及']),
+  CN('previousRentalHistory','過去租屋經驗',['穩定，無糾紛','曾有糾紛','無先前租屋經驗','未詳談']),
+]},
+{id:'l7',title:'⑦ 決定',fields:[
+  C('status','目前狀態',['已聯繫','已看房','考慮中','已簽約','婉拒']),
+  C('decision','我的決定',['✅ 願意出租','🤔 考慮中','❌ 不考慮']),
+  TG('decisionReasonTags','決定原因（可複選）',['財力穩定','態度良好','需求條件符合','有疑慮見紅旗','已有更適合人選','準時可靠','溝通良好']),
+  TA('note','其他備註'),
+]},
+];
+const LANDLORD_SCORE_KEYS=['scorePolite','scoreCommunication','scoreQuestionQuality'];
+
+const LANDLORD_HELP=[
+  {cat:'基本資訊', qs:['方便請問平常從事什麼工作呢？','預計幾個人一起入住？','有養寵物嗎？養多久了、大概多大？']},
+  {cat:'財力與信用', qs:['方便提供在職證明或收入證明嗎？','需要保證人嗎？','之前租屋大概租多久，方便說一下為什麼會搬家嗎？']},
+  {cat:'租屋需求', qs:['預計想租多久？','希望什麼時候入住？','平常作息會不會比較晚、常有訪客嗎？']},
+  {cat:'確認細節', qs:['會不會抽菸？','了解租約中的規定嗎（如禁止轉租、寵物條款）？','方便提供證件核對身分嗎？']},
+];
+
+const LANDLORD_CSV_COLS=[['nickname','姓名'],['contactPhone','電話'],['occupation','職業'],['company','公司／學校'],
+  ['occupants','入住人數'],['budget','預算'],['petPlan','寵物'],['incomeProof','財力證明'],
+  ['punctual','準時度'],['overallVibe','整體感覺'],['status','目前狀態'],['decision','我的決定']];
 
 /* =========================================================
    STATE + STORAGE
 ========================================================= */
-const STORAGE_KEY='house_viewing_records_v2';
-let state={houses:[],view:'list',editingId:null,search:'',sortBy:'smart',filterStatus:''};
+const STORAGE_KEYS={tenant:'house_viewing_records_v2', landlord:'house_viewing_landlord_v1'};
+const MODE_KEY='house_app_last_mode';
+let state={mode:'tenant', data:{tenant:[],landlord:[]}, view:'list', editingId:null, search:'', sortBy:'smart', filterStatus:''};
 let storageOK=true;
 
 function loadState(){
   try{
-    const raw=localStorage.getItem(STORAGE_KEY);
-    if(raw){const d=JSON.parse(raw); if(Array.isArray(d)) state.houses=d;}
+    const t=localStorage.getItem(STORAGE_KEYS.tenant);
+    if(t){ const d=JSON.parse(t); if(Array.isArray(d)) state.data.tenant=d; }
     else{
       const old=localStorage.getItem('house_viewing_records_v1');
-      if(old){ const d=JSON.parse(old); if(Array.isArray(d)) state.houses=d; }
+      if(old){ const d=JSON.parse(old); if(Array.isArray(d)) state.data.tenant=d; }
     }
+    const l=localStorage.getItem(STORAGE_KEYS.landlord);
+    if(l){ const d=JSON.parse(l); if(Array.isArray(d)) state.data.landlord=d; }
+    const m=localStorage.getItem(MODE_KEY);
+    if(m==='tenant'||m==='landlord') state.mode=m;
   }catch(e){ storageOK=false; }
 }
 let saveTimer=null;
 function saveState(immediate){
   const doSave=()=>{
-    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state.houses)); storageOK=true; }
-    catch(e){ storageOK=false; }
+    try{
+      localStorage.setItem(STORAGE_KEYS[state.mode], JSON.stringify(state.data[state.mode]));
+      localStorage.setItem(MODE_KEY, state.mode);
+      storageOK=true;
+    }catch(e){ storageOK=false; }
   };
   if(immediate){ doSave(); return; }
   clearTimeout(saveTimer);
@@ -557,43 +651,112 @@ function saveState(immediate){
 }
 
 function uid(){ return 'h'+Math.random().toString(36).slice(2,9)+Date.now().toString(36); }
-function newHouse(){ return {id:uid(), createdAt:new Date().toISOString(), data:{}}; }
+function newRecord(){ return {id:uid(), createdAt:new Date().toISOString(), data:{}}; }
+function curRecords(){ return state.data[state.mode]; }
 
 /* =========================================================
-   SCORING ENGINE
+   MODE CONFIG
 ========================================================= */
-function hasAnyScore(house){ return SCORE_KEYS.some(k=>Number(house.data[k])>0); }
-function starAvg(house){
-  let sum=0,n=0;
-  SCORE_KEYS.forEach(k=>{ const v=Number(house.data[k])||0; if(v>0){ sum+=v; n++; } });
-  return n?sum/n:0;
-}
-function redFlagCount(house){ const a=house.data.redFlags; return Array.isArray(a)?a.length:0; }
-function photoCount(house){ const a=house.data.photoChecklist; return Array.isArray(a)?a.length:0; }
-function monthlyTotal(house){ return (Number(house.data.rent)||0)+(Number(house.data.mgmtFee)||0); }
+function monthlyTotal(r){ return (Number(r.data.rent)||0)+(Number(r.data.mgmtFee)||0); }
+function redFlagCount(r){ const a=r.data.redFlags; return Array.isArray(a)?a.length:0; }
+function photoCount(r){ const a=r.data.photoChecklist; return Array.isArray(a)?a.length:0; }
 
-function finalScore(house){
-  if(!hasAnyScore(house)) return null;
-  const base=starAvg(house)/5*100;
-  const flagPenalty=Math.min(redFlagCount(house)*4,40);
+function clamp100(v){ return Math.max(0,Math.min(100,Math.round(v))); }
+
+function tenantFinalScore(r){
+  let sum=0,n=0;
+  TENANT_SCORE_KEYS.forEach(k=>{ const v=Number(r.data[k])||0; if(v>0){ sum+=v; n++; } });
+  if(n===0) return null;
+  const base=(sum/n)/5*100;
+  const flagPenalty=Math.min(redFlagCount(r)*4,40);
   const gutMap={'放心':5,'普通':0,'有點怪':-8,'不舒服':-15};
-  const gutAdj=gutMap[house.data.gutFeeling]||0;
+  const gutAdj=gutMap[r.data.gutFeeling]||0;
   const petMap={'不行':-15,'需確認':-5};
-  const petAdj=petMap[house.data.petAllowed]||0;
-  let s=base-flagPenalty+gutAdj+petAdj;
-  return Math.max(0,Math.min(100,Math.round(s)));
+  const petAdj=petMap[r.data.petAllowed]||0;
+  return clamp100(base-flagPenalty+gutAdj+petAdj);
 }
-function scoreClass(score){
-  if(score===null) return 'none';
-  if(score>=80) return 'good';
-  if(score>=60) return 'mid';
-  return 'bad';
+function landlordFinalScore(r){
+  let sum=0,n=0;
+  LANDLORD_SCORE_KEYS.forEach(k=>{ const v=Number(r.data[k])||0; if(v>0){ sum+=v; n++; } });
+  if(n===0) return null;
+  const base=(sum/n)/5*100;
+  const flagPenalty=Math.min(redFlagCount(r)*5,50);
+  const punctualMap={'準時':5,'稍微遲到':0,'遲到很多':-8,'沒有出現':-30};
+  const punctualAdj=punctualMap[r.data.punctual]||0;
+  const incomeMap={'可以':8,'需要再問':0,'無法提供':-15};
+  const incomeAdj=incomeMap[r.data.incomeProof]||0;
+  const vibeMap={'很好':5,'普通':0,'有點怪':-10,'不放心':-20};
+  const vibeAdj=vibeMap[r.data.overallVibe]||0;
+  return clamp100(base-flagPenalty+punctualAdj+incomeAdj+vibeAdj);
 }
+function finalScore(r){ return state.mode==='landlord'?landlordFinalScore(r):tenantFinalScore(r); }
+
+function tenantTopTags(r,ctx){
+  const tags=[];
+  if(redFlagCount(r)===0) tags.push('零紅旗');
+  if(r.data.gutFeeling==='放心') tags.push('房東放心');
+  if(ctx&&r.id===ctx.cheapestId) tags.push('租金最低');
+  if(r.data.petAllowed==='明確可以') tags.push('明確可貓');
+  return tags.slice(0,2);
+}
+function landlordTopTags(r){
+  const tags=[];
+  if(redFlagCount(r)===0) tags.push('零警訊');
+  if(r.data.incomeProof==='可以') tags.push('財力穩定');
+  if(r.data.punctual==='準時') tags.push('準時');
+  if(r.data.overallVibe==='很好') tags.push('印象良好');
+  return tags.slice(0,2);
+}
+
+const MODE_CFG={
+  tenant:{
+    label:'房客模式', icon:'🏠', appTitle:'看房紀錄',
+    sections:TENANT_SECTIONS,
+    addLabel:'新增看房紀錄',
+    idPlaceholder:'一句話辨識，例：頂溪｜25K｜27坪｜3F｜屋主｜可貓',
+    emptyIcon:'🏚️', emptyTextNone:'還沒有看房紀錄<br>點右下角「＋」新增第一間', emptyTextFiltered:'找不到符合的紀錄',
+    subtitle:(r)=> r.data.address||r.data.district||'尚未填寫地址',
+    pills:(r)=>{ const arr=[]; if(r.data.rent) arr.push('$'+monthlyTotal(r).toLocaleString()+'/月'); if(r.data.ping) arr.push(r.data.ping+'坪'); return arr; },
+    compareLine:(r)=> `${r.data.rent?('$'+monthlyTotal(r).toLocaleString()+'/月　'):''}${r.data.status||''}${redFlagCount(r)>0?'　🚩'+redFlagCount(r):''}`,
+    summaryTile1:(r)=>({label:'每月固定支出', value:r.data.rent?('$'+monthlyTotal(r).toLocaleString()):'—'}),
+    flagLabel:'紅旗警訊',
+    rankPanelTitle:'🏆 目前排行榜（依系統綜合評分）',
+    scoreExplain:'綜合評分＝12項星等平均換算100分，再依紅旗數量、直覺感受、寵物條件加減分',
+    buildTopTags:tenantTopTags,
+    helpTitle:'💡 看房時可以問的問題',
+    helpQuestions:TENANT_HELP,
+    csvColumns:TENANT_CSV_COLS,
+    exportPrefix:'看房紀錄',
+    clearConfirm:'確定要清空所有看房紀錄嗎？建議先匯出備份！',
+  },
+  landlord:{
+    label:'房東模式', icon:'🔑', appTitle:'租客篩選',
+    sections:LANDLORD_SECTIONS,
+    addLabel:'新增租客紀錄',
+    idPlaceholder:'例：王小姐｜上班族｜2人＋1貓｜預算25K',
+    emptyIcon:'🧑‍🤝‍🧑', emptyTextNone:'還沒有租客紀錄<br>點右下角「＋」新增第一位', emptyTextFiltered:'找不到符合的紀錄',
+    subtitle:(r)=> [r.data.occupation,r.data.company].filter(Boolean).join(' · ')||r.data.contactPhone||'尚未填寫資料',
+    pills:(r)=>{ const arr=[]; if(r.data.budget) arr.push('$'+Number(r.data.budget).toLocaleString()+'/月預算'); if(r.data.occupants) arr.push(r.data.occupants+'人'); if(r.data.petPlan&&r.data.petPlan!=='無') arr.push(r.data.petPlan); return arr; },
+    compareLine:(r)=> `${r.data.budget?('$'+Number(r.data.budget).toLocaleString()+'/月　'):''}${r.data.status||''}${redFlagCount(r)>0?'　🚩'+redFlagCount(r):''}`,
+    summaryTile1:(r)=>({label:'預算', value:r.data.budget?('$'+Number(r.data.budget).toLocaleString()):'—'}),
+    flagLabel:'需留意警訊',
+    rankPanelTitle:'🏆 目前推薦人選（依系統綜合評分）',
+    scoreExplain:'綜合評分＝禮貌／溝通／提問合理度平均換算100分，再依警訊數量、準時度、財力證明、整體感覺加減分',
+    buildTopTags:landlordTopTags,
+    helpTitle:'💡 篩選租客時可以問的問題',
+    helpQuestions:LANDLORD_HELP,
+    csvColumns:LANDLORD_CSV_COLS,
+    exportPrefix:'租客篩選',
+    clearConfirm:'確定要清空所有租客紀錄嗎？建議先匯出備份！',
+  },
+};
+function cfg(){ return MODE_CFG[state.mode]; }
+
 function computeRanks(){
-  const scored=state.houses.filter(h=>finalScore(h)!==null).slice()
+  const scored=curRecords().filter(r=>finalScore(r)!==null).slice()
     .sort((a,b)=>finalScore(b)-finalScore(a));
   const map={};
-  scored.forEach((h,i)=>{ map[h.id]=i+1; });
+  scored.forEach((r,i)=>{ map[r.id]=i+1; });
   return map;
 }
 const MEDALS={1:'🥇',2:'🥈',3:'🥉'};
@@ -602,12 +765,13 @@ const MEDALS={1:'🥇',2:'🥈',3:'🥉'};
    RENDER: LIST VIEW
 ========================================================= */
 function renderList(){
+  const c=cfg();
   const el=document.createElement('div');
   const ranks=computeRanks();
-  const houses=state.houses.filter(h=>{
+  const recs=curRecords().filter(r=>{
     if(!state.search) return true;
-    const s=(h.data.nickname||'')+(h.data.address||'')+(h.data.district||'');
-    return s.toLowerCase().includes(state.search.toLowerCase());
+    try{ return JSON.stringify(r.data).toLowerCase().includes(state.search.toLowerCase()); }
+    catch(e){ return true; }
   });
 
   if(!storageOK){
@@ -617,47 +781,52 @@ function renderList(){
   }
 
   const searchWrap=document.createElement('div'); searchWrap.className='searchbar';
-  searchWrap.innerHTML=`<span>🔍</span><input type="text" placeholder="搜尋暱稱、地址、行政區…" value="${escapeAttr(state.search)}">`;
+  searchWrap.innerHTML=`<span>🔍</span><input type="text" placeholder="搜尋…" value="${escapeAttr(state.search)}">`;
   searchWrap.querySelector('input').addEventListener('input',e=>{ state.search=e.target.value; renderApp(); });
   el.appendChild(searchWrap);
 
-  if(houses.length===0){
+  if(recs.length===0){
     const empty=document.createElement('div'); empty.className='empty-state';
-    empty.innerHTML=`<div class="big">🏚️</div>${state.houses.length===0?'還沒有看房紀錄<br>點右下角「＋」新增第一間':'找不到符合的紀錄'}`;
+    empty.innerHTML=`<div class="big">${c.emptyIcon}</div>${curRecords().length===0?c.emptyTextNone:c.emptyTextFiltered}`;
     el.appendChild(empty);
     return el;
   }
 
-  houses.slice().reverse().forEach(h=>{
-    const d=h.data;
+  recs.slice().reverse().forEach(r=>{
+    const d=r.data;
     const card=document.createElement('div'); card.className='house-card';
-    const sc=finalScore(h);
-    const flags=redFlagCount(h);
-    const rentTxt=d.rent?('$'+Number(monthlyTotal(h)).toLocaleString()+'/月'):'';
-    const rank=ranks[h.id];
+    const sc=finalScore(r);
+    const flags=redFlagCount(r);
+    const rank=ranks[r.id];
     const medal=rank&&MEDALS[rank]?MEDALS[rank]+' ':'';
+    const extraPills=c.pills(r).map(p=>`<span class="pill">${escapeHtml(p)}</span>`).join('');
     card.innerHTML=`
-      <div class="tag-line">${medal}${escapeHtml(d.nickname||'（未命名物件）')}</div>
-      <div class="addr">${escapeHtml(d.address||d.district||'尚未填寫地址')}</div>
+      <div class="tag-line">${medal}${escapeHtml(d.nickname||'（未命名）')}</div>
+      <div class="addr">${escapeHtml(c.subtitle(r))}</div>
       <div class="meta-row">
-        ${rentTxt?`<span class="pill">${rentTxt}</span>`:''}
-        ${d.ping?`<span class="pill">${escapeHtml(String(d.ping))}坪</span>`:''}
+        ${extraPills}
         <span class="score-badge ${scoreClass(sc)}">${sc===null?'尚未評分':'綜合 '+sc+'分'}</span>
         ${d.status?`<span class="pill status">${escapeHtml(d.status)}</span>`:''}
         ${flags>0?`<span class="pill flag">🚩 ${flags}項</span>`:''}
         ${d.decision?`<span class="pill decision">${escapeHtml(d.decision)}</span>`:''}
       </div>`;
-    card.addEventListener('click',()=>{ state.editingId=h.id; state.view='edit'; renderApp(); });
+    card.addEventListener('click',()=>{ state.editingId=r.id; state.view='edit'; renderApp(); });
     el.appendChild(card);
   });
   return el;
+}
+function scoreClass(score){
+  if(score===null) return 'none';
+  if(score>=80) return 'good';
+  if(score>=60) return 'mid';
+  return 'bad';
 }
 
 /* =========================================================
    RENDER: EDIT VIEW — field renderers
 ========================================================= */
 function getField(key){
-  for(const sec of SECTIONS){ for(const f of sec.fields){ if(f.key===key) return f; } }
+  for(const sec of cfg().sections){ for(const f of sec.fields){ if(f.key===key) return f; } }
   return null;
 }
 function fieldValue(house,key){ return house.data[key]; }
@@ -665,7 +834,7 @@ function setFieldValue(house,key,val){ house.data[key]=val; saveState(); }
 
 function onSelectChanged(house,key){
   if(key!=='city') return;
-  // 換縣市時，清掉不屬於新縣市的行政區並重繪那一欄
+  // 換縣市時清掉不屬於新縣市的行政區並重繪那一欄
   const list=TW_AREAS[house.data.city]||[];
   if(house.data.district&&!list.includes(house.data.district)){ house.data.district=''; saveState(); }
   const w=document.querySelector('[data-field-key="district"]');
@@ -909,7 +1078,7 @@ function renderFieldHTML(house,f){
 function refreshTopBadge(){
   const badge=document.getElementById('topFloorBadge');
   if(!badge) return;
-  const house=state.houses.find(h=>h.id===state.editingId);
+  const house=curRecords().find(h=>h.id===state.editingId);
   if(!house) return;
   const at=Number(house.data.floorAt)||0, tot=Number(house.data.floorTotal)||0;
   badge.textContent=(at>0&&tot>0&&at===tot)?'🔝 這是頂樓':'';
@@ -918,27 +1087,30 @@ function refreshTopBadge(){
 function refreshSummaryBar(house){
   const bar=document.getElementById('summaryBar');
   if(!bar) return;
-  bar.querySelector('[data-sum="rent"]').textContent = house.data.rent?('$'+monthlyTotal(house).toLocaleString()):'—';
+  const c=cfg();
+  const tile1=c.summaryTile1(house);
+  bar.querySelector('[data-sum="t1"]').textContent = tile1.value;
   const sc=finalScore(house);
   bar.querySelector('[data-sum="score"]').textContent = sc===null?'—':(sc+'分');
   bar.querySelector('[data-sum="flag"]').textContent = redFlagCount(house);
 }
 
 function renderEdit(){
-  const house=state.houses.find(h=>h.id===state.editingId);
+  const c=cfg();
+  const house=curRecords().find(h=>h.id===state.editingId);
   const el=document.createElement('div');
   if(!house){ el.textContent='找不到這筆紀錄'; return el; }
 
   const hd=document.createElement('div'); hd.className='edit-header';
   hd.innerHTML=`<button class="back">←</button>
-    <input class="id-input" placeholder="一句話辨識，例：頂溪｜25K｜27坪｜3F｜屋主｜可貓" value="${escapeAttr(house.data.nickname||'')}">
+    <input class="id-input" placeholder="${escapeAttr(c.idPlaceholder)}" value="${escapeAttr(house.data.nickname||'')}">
     <button class="del-btn">刪除</button>`;
   hd.querySelector('.back').addEventListener('click',()=>{ state.view='list'; state.editingId=null; renderApp(); });
   hd.querySelector('.id-input').addEventListener('input',e=>{ setFieldValue(house,'nickname',e.target.value); });
   hd.querySelector('.del-btn').addEventListener('click',()=>{
-    if(confirm('確定要刪除這筆看房紀錄嗎？此動作無法復原。')){
+    if(confirm('確定要刪除這筆紀錄嗎？此動作無法復原。')){
       photoRemoveByHouse(house.id).catch(()=>{});
-      state.houses=state.houses.filter(h=>h.id!==house.id);
+      state.data[state.mode]=curRecords().filter(h=>h.id!==house.id);
       saveState(true); state.view='list'; state.editingId=null; renderApp();
       showToast('已刪除');
     }
@@ -946,23 +1118,26 @@ function renderEdit(){
   el.appendChild(hd);
 
   const sc=finalScore(house);
+  const tile1=c.summaryTile1(house);
   const bar=document.createElement('div'); bar.className='summary-bar'; bar.id='summaryBar';
   bar.innerHTML=`
-    <div class="summary-tile"><div class="val" data-sum="rent">${house.data.rent?('$'+monthlyTotal(house).toLocaleString()):'—'}</div><div class="lbl">每月固定支出</div></div>
+    <div class="summary-tile"><div class="val" data-sum="t1">${tile1.value}</div><div class="lbl">${tile1.label}</div></div>
     <div class="summary-tile"><div class="val" data-sum="score">${sc===null?'—':(sc+'分')}</div><div class="lbl">系統綜合評分</div></div>
-    <div class="summary-tile"><div class="val" data-sum="flag">${redFlagCount(house)}</div><div class="lbl">紅旗警訊</div></div>`;
+    <div class="summary-tile"><div class="val" data-sum="flag">${redFlagCount(house)}</div><div class="lbl">${c.flagLabel}</div></div>`;
   el.appendChild(bar);
 
-  const quick=document.createElement('div'); quick.className='chip-row'; quick.style.marginBottom='12px';
-  [['📋 從 591 貼上',()=>open591Dialog(house)],['📍 查附近交通',()=>openTransitLookup(house)]]
-    .forEach(([txt,fn])=>{
-      const b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=txt;
-      b.addEventListener('click',fn); quick.appendChild(b);
-    });
-  el.appendChild(quick);
+  if(state.mode==='tenant'){
+    const quick=document.createElement('div'); quick.className='chip-row'; quick.style.marginBottom='12px';
+    [['📋 從 591 匯入',()=>open591Dialog(house)],['📍 查附近交通',()=>openTransitLookup(house)]]
+      .forEach(([txt,fn])=>{
+        const b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=txt;
+        b.addEventListener('click',fn); quick.appendChild(b);
+      });
+    el.appendChild(quick);
+  }
   el.appendChild(renderPhotoBox(house));
 
-  SECTIONS.forEach((sec,idx)=>{
+  c.sections.forEach((sec,idx)=>{
     const det=document.createElement('details'); det.className='section';
     if(idx===0) det.open=true;
     const sum=document.createElement('summary');
@@ -981,39 +1156,34 @@ function renderEdit(){
 /* =========================================================
    RENDER: COMPARE VIEW（含排行榜）
 ========================================================= */
-function buildTags(house,rank,cheapest){
-  const tags=[];
-  if(redFlagCount(house)===0) tags.push('零紅旗');
-  if(house.data.gutFeeling==='放心') tags.push('房東放心');
-  if(house.id===cheapest) tags.push('租金最低');
-  if(house.data.petAllowed==='明確可以') tags.push('明確可貓');
-  return tags.slice(0,2);
-}
-
 function renderCompare(){
+  const c=cfg();
   const el=document.createElement('div');
-  const scoredHouses=state.houses.filter(h=>finalScore(h)!==null);
+  const scoredRecs=curRecords().filter(r=>finalScore(r)!==null);
 
-  if(scoredHouses.length>0){
-    const sorted=scoredHouses.slice().sort((a,b)=>finalScore(b)-finalScore(a));
-    const withRent=scoredHouses.filter(h=>h.data.rent);
-    const cheapest=withRent.length?withRent.reduce((a,b)=>monthlyTotal(a)<=monthlyTotal(b)?a:b).id:null;
+  if(scoredRecs.length>0){
+    const sorted=scoredRecs.slice().sort((a,b)=>finalScore(b)-finalScore(a));
+    let ctx={};
+    if(state.mode==='tenant'){
+      const withRent=scoredRecs.filter(r=>r.data.rent);
+      ctx.cheapestId=withRent.length?withRent.reduce((a,b)=>monthlyTotal(a)<=monthlyTotal(b)?a:b).id:null;
+    }
     const top=sorted.slice(0,3);
     const card=document.createElement('div'); card.className='top-pick-card';
-    card.innerHTML=`<h3>🏆 目前排行榜（依系統綜合評分）</h3>`;
-    top.forEach((h,i)=>{
+    card.innerHTML=`<h3>${c.rankPanelTitle}</h3>`;
+    top.forEach((r,i)=>{
       const row=document.createElement('div'); row.className='top-pick-row';
-      const tags=buildTags(h,i+1,cheapest);
+      const tags=c.buildTopTags(r,ctx);
       row.innerHTML=`<span class="medal">${MEDALS[i+1]||''}</span>
-        <div class="info"><div class="t1">${escapeHtml(h.data.nickname||'（未命名）')}</div>
+        <div class="info"><div class="t1">${escapeHtml(r.data.nickname||'（未命名）')}</div>
         <div class="tags">${tags.map(t=>`<span>${t}</span>`).join('')}</div></div>
-        <div class="n">${finalScore(h)}</div>`;
-      row.addEventListener('click',()=>{ state.editingId=h.id; state.view='edit'; renderApp(); });
+        <div class="n">${finalScore(r)}</div>`;
+      row.addEventListener('click',()=>{ state.editingId=r.id; state.view='edit'; renderApp(); });
       card.appendChild(row);
     });
     el.appendChild(card);
     const explain=document.createElement('div'); explain.className='score-explain';
-    explain.textContent='綜合評分＝12項星等平均換算100分，再依紅旗數量、直覺感受、寵物條件加減分';
+    explain.textContent=c.scoreExplain;
     el.appendChild(explain);
   }
 
@@ -1021,51 +1191,45 @@ function renderCompare(){
   ctrl.innerHTML=`
     <select id="sortSel">
       <option value="smart">依系統綜合評分（高→低）</option>
-      <option value="rent">依租金排序（低→高）</option>
-      <option value="flag">依紅旗數排序（低→高）</option>
-      <option value="date">依看房日期（新→舊）</option>
+      <option value="flag">依警訊數排序（低→高）</option>
+      <option value="date">依日期（新→舊）</option>
     </select>
-    <select id="statusSel">
-      <option value="">全部狀態</option>
-      <option value="未看房">未看房</option><option value="已預約">已預約</option>
-      <option value="已看房">已看房</option><option value="考慮中">考慮中</option>
-      <option value="第二順位">第二順位</option><option value="準備簽約">準備簽約</option>
-      <option value="淘汰">淘汰</option>
-    </select>`;
-  ctrl.querySelector('#sortSel').value=state.sortBy;
-  ctrl.querySelector('#statusSel').value=state.filterStatus;
+    <select id="statusSel"><option value="">全部狀態</option></select>`;
+  const statusOptsField=(c.sections.flatMap(s=>s.fields).find(f=>f.key==='status'));
+  const statusSel=ctrl.querySelector('#statusSel');
+  (statusOptsField?statusOptsField.options:[]).forEach(opt=>{ const o=document.createElement('option'); o.value=opt; o.textContent=opt; statusSel.appendChild(o); });
+  ctrl.querySelector('#sortSel').value=state.sortBy==='rent'?'smart':state.sortBy;
+  statusSel.value=state.filterStatus;
   ctrl.querySelector('#sortSel').addEventListener('change',e=>{ state.sortBy=e.target.value; renderApp(); });
-  ctrl.querySelector('#statusSel').addEventListener('change',e=>{ state.filterStatus=e.target.value; renderApp(); });
+  statusSel.addEventListener('change',e=>{ state.filterStatus=e.target.value; renderApp(); });
   el.appendChild(ctrl);
 
-  let houses=state.houses.slice();
-  if(state.filterStatus) houses=houses.filter(h=>h.data.status===state.filterStatus);
+  let recs=curRecords().slice();
+  if(state.filterStatus) recs=recs.filter(r=>r.data.status===state.filterStatus);
 
-  if(houses.length===0){
+  if(recs.length===0){
     const empty=document.createElement('div'); empty.className='empty-state';
     empty.innerHTML=`<div class="big">📊</div>還沒有可以比較的紀錄`;
     el.appendChild(empty); return el;
   }
 
-  houses.sort((a,b)=>{
-    if(state.sortBy==='smart'){ const sa=finalScore(a),sb=finalScore(b); if(sa===null&&sb===null) return 0; if(sa===null) return 1; if(sb===null) return -1; return sb-sa; }
-    if(state.sortBy==='rent') return (monthlyTotal(a)||1e12)-(monthlyTotal(b)||1e12);
+  recs.sort((a,b)=>{
     if(state.sortBy==='flag') return redFlagCount(a)-redFlagCount(b);
     if(state.sortBy==='date') return (b.data.viewDate||'').localeCompare(a.data.viewDate||'');
-    return 0;
+    const sa=finalScore(a),sb=finalScore(b); if(sa===null&&sb===null) return 0; if(sa===null) return 1; if(sb===null) return -1; return sb-sa;
   });
 
-  houses.forEach((h,i)=>{
+  recs.forEach((r,i)=>{
     const row=document.createElement('div'); row.className='compare-row';
-    const sc=finalScore(h);
+    const sc=finalScore(r);
     row.innerHTML=`
       <div class="rank">${i+1}</div>
       <div class="info">
-        <div class="t1">${escapeHtml(h.data.nickname||'（未命名）')}</div>
-        <div class="t2">${h.data.rent?('$'+monthlyTotal(h).toLocaleString()+'/月　'):''}${h.data.status||''}${redFlagCount(h)>0?'　🚩'+redFlagCount(h):''}</div>
+        <div class="t1">${escapeHtml(r.data.nickname||'（未命名）')}</div>
+        <div class="t2">${c.compareLine(r)}</div>
       </div>
       <span class="score-badge ${scoreClass(sc)}">${sc===null?'尚未評分':sc+'分'}</span>`;
-    row.addEventListener('click',()=>{ state.editingId=h.id; state.view='edit'; renderApp(); });
+    row.addEventListener('click',()=>{ state.editingId=r.id; state.view='edit'; renderApp(); });
     el.appendChild(row);
   });
   return el;
@@ -1074,19 +1238,13 @@ function renderCompare(){
 /* =========================================================
    RENDER: HELP VIEW
 ========================================================= */
-const HELP_QUESTIONS=[
-  {cat:'費用', qs:['水電怎麼計費？夏天電費是不是特別貴？','管理費包含哪些項目？垃圾費另外算嗎？','網路要自己申辦還是已經有？','押金退還的條件跟時間？']},
-  {cat:'設備', qs:['客廳／房間冷氣是變頻還是傳統？大概幾年了？','熱水器是瓦斯還是電的？在室內還室外？','家具家電哪些是原本就有的？可以搬走不要的嗎？','壞掉的話是房東還是房客負責維修？']},
-  {cat:'寵物', qs:['可以養貓嗎？可以白紙黑字寫進租約嗎？','有沒有寵物押金或月費？','對品種、數量、體型有限制嗎？']},
-  {cat:'契約與安全', qs:['可以先看契約草稿嗎？','提前解約的違約金怎麼算？','房東可以隨便進來嗎？需不需要事先約？','可以報稅／可以設籍嗎？']},
-  {cat:'房東／房仲', qs:['可以直接跟房東本人聯絡嗎？','之前的房客為什麼搬走？','附近晚上吵不吵？（觀察對方回答會不會閃躲）']},
-];
 function renderHelp(){
+  const c=cfg();
   const el=document.createElement('div');
   const intro=document.createElement('div'); intro.className='empty-state'; intro.style.padding='10px 4px 18px'; intro.style.textAlign='left';
-  intro.innerHTML=`<b style="color:var(--accent-dark)">💡 看房時可以問的問題</b><br><span style="font-size:12.5px">點一下可以複製到剪貼簿，看房時照著問就不怕忘記。</span>`;
+  intro.innerHTML=`<b style="color:var(--accent-dark)">${c.helpTitle}</b><br><span style="font-size:12.5px">點一下可以複製到剪貼簿，現場照著問就不怕忘記。</span>`;
   el.appendChild(intro);
-  HELP_QUESTIONS.forEach(g=>{
+  c.helpQuestions.forEach(g=>{
     const det=document.createElement('details'); det.className='section'; det.open=true;
     det.innerHTML=`<summary><span>${g.cat}</span><span class="chev">▶</span></summary>`;
     const body=document.createElement('div'); body.className='section-body';
@@ -1110,18 +1268,19 @@ function renderHelp(){
    MENU / EXPORT / IMPORT
 ========================================================= */
 function openMenu(){
+  const c=cfg();
   const bd=document.createElement('div'); bd.className='modal-backdrop';
   bd.addEventListener('click',e=>{ if(e.target===bd) bd.remove(); });
   const sheet=document.createElement('div'); sheet.className='modal-sheet'; sheet.style.position='relative';
   sheet.innerHTML=`
     <button class="modal-close">✕</button>
-    <h2>選單</h2>
+    <h2>選單（${c.label}）</h2>
     <div class="menu-item" id="mExport"><span class="ic">⬇️</span><div><div>匯出備份（JSON）</div><div class="menu-desc">存成一個小檔案，可以傳到雲端硬碟或另一支手機／電腦匯入</div></div></div>
     <div class="menu-item" id="mImport"><span class="ic">⬆️</span><div><div>匯入備份（JSON）</div><div class="menu-desc">讀回之前匯出的備份檔（會與目前資料合併）</div></div></div>
     <div class="menu-item" id="mCsv"><span class="ic">📑</span><div><div>匯出成 CSV（可用 Excel／Google試算表開啟）</div><div class="menu-desc">方便用電腦做進一步比較</div></div></div>
     <div class="menu-item" id="mPrint"><span class="ic">🖨️</span><div><div>列印紙本表格</div><div class="menu-desc">印出空白表格現場手寫，或把已填的紀錄印出來</div></div></div>
     <div class="menu-item" id="mHome"><span class="ic">📲</span><div><div>加到手機主畫面</div><div class="menu-desc">iPhone：分享 → 加入主畫面；Android：瀏覽器選單 → 加到主畫面</div></div></div>
-    <div class="menu-item" id="mClear"><span class="ic">🗑️</span><div><div style="color:var(--red)">清空全部紀錄</div></div></div>`;
+    <div class="menu-item" id="mClear"><span class="ic">🗑️</span><div><div style="color:var(--red)">清空「${c.label}」全部紀錄</div></div></div>`;
   sheet.querySelector('.modal-close').addEventListener('click',()=>bd.remove());
   sheet.querySelector('#mExport').addEventListener('click',()=>{ exportJSON(); bd.remove(); });
   sheet.querySelector('#mImport').addEventListener('click',()=>{ document.getElementById('fileImport').click(); bd.remove(); });
@@ -1129,8 +1288,8 @@ function openMenu(){
   sheet.querySelector('#mPrint').addEventListener('click',()=>{ bd.remove(); openPrintDialog(); });
   sheet.querySelector('#mHome').addEventListener('click',()=>{ showToast('請用瀏覽器的「分享」或選單功能加入主畫面'); bd.remove(); });
   sheet.querySelector('#mClear').addEventListener('click',()=>{
-    if(confirm('確定要清空所有看房紀錄嗎？建議先匯出備份！')){
-      state.houses=[]; saveState(true); bd.remove(); renderApp(); showToast('已清空');
+    if(confirm(c.clearConfirm)){
+      state.data[state.mode]=[]; saveState(true); bd.remove(); renderApp(); showToast('已清空');
     }
   });
   bd.appendChild(sheet);
@@ -1138,13 +1297,17 @@ function openMenu(){
 }
 
 async function exportJSON(){
+  const c=cfg();
   let photos=[];
-  try{ photos=await photoAll(); }catch(e){}
-  const payload={exportedAt:new Date().toISOString(), houses:state.houses, photos};
+  try{
+    const ids=new Set(curRecords().map(r=>r.id));
+    photos=(await photoAll()).filter(p=>ids.has(p.houseId));
+  }catch(e){}
+  const payload={exportedAt:new Date().toISOString(), mode:state.mode, records:curRecords(), photos};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const a=document.createElement('a');
   const dateStr=new Date().toISOString().slice(0,10);
-  a.href=URL.createObjectURL(blob); a.download=`看房紀錄備份_${dateStr}.json`;
+  a.href=URL.createObjectURL(blob); a.download=`${c.exportPrefix}備份_${dateStr}.json`;
   document.body.appendChild(a); a.click(); a.remove();
   const mb=(JSON.stringify(payload).length/1048576).toFixed(1);
   showToast(`已匯出備份檔（含 ${photos.length} 張照片，約 ${mb} MB）`);
@@ -1156,22 +1319,19 @@ function csvEscape(v){
   return '"'+s.replace(/"/g,'""')+'"';
 }
 function exportCSV(){
-  const cols=[['nickname','一句話辨識'],['address','完整地址'],['district','行政區'],['viewDate','看房日期'],
-    ['rent','月租'],['mgmtFee','管理費'],['ping','坪數'],['rooms','房'],['livingRooms','廳'],['bathrooms','衛'],
-    ['floorAt','所在樓層'],['floorTotal','共幾層'],['elevator','電梯'],
-    ['furnishStatus','出租狀態'],['acLivingType','客廳冷氣類型'],['petAllowed','可養貓'],
-    ['status','目前狀態'],['decision','我的決定']];
-  const header=cols.map(c=>csvEscape(c[1])).concat(['系統綜合評分','紅旗數']).join(',');
-  const rows=state.houses.map(h=>{
-    const vals=cols.map(c=>csvEscape(h.data[c[0]]));
-    const sc=finalScore(h);
-    vals.push(sc===null?'':sc); vals.push(redFlagCount(h));
+  const c=cfg();
+  const cols=c.csvColumns;
+  const header=cols.map(col=>csvEscape(col[1])).concat(['系統綜合評分',c.flagLabel]).join(',');
+  const rows=curRecords().map(r=>{
+    const vals=cols.map(col=>csvEscape(r.data[col[0]]));
+    const sc=finalScore(r);
+    vals.push(sc===null?'':sc); vals.push(redFlagCount(r));
     return vals.join(',');
   });
   const csv='﻿'+[header,...rows].join('\r\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob); a.download='看房比較.csv';
+  a.href=URL.createObjectURL(blob); a.download=`${c.exportPrefix}.csv`;
   document.body.appendChild(a); a.click(); a.remove();
   showToast('已匯出 CSV');
 }
@@ -1182,13 +1342,12 @@ document.getElementById('fileImport').addEventListener('change',e=>{
   reader.onload=()=>{
     try{
       const parsed=JSON.parse(reader.result);
-      const incoming=Array.isArray(parsed)?parsed:parsed.houses;
+      const incoming=Array.isArray(parsed)?parsed:(parsed.records||parsed.houses);
       if(!Array.isArray(incoming)) throw new Error('格式錯誤');
-      const existingIds=new Set(state.houses.map(h=>h.id));
+      const existingIds=new Set(curRecords().map(h=>h.id));
       let added=0;
-      incoming.forEach(h=>{ if(h&&h.id&&!existingIds.has(h.id)){ state.houses.push(h); added++; } });
+      incoming.forEach(h=>{ if(h&&h.id&&!existingIds.has(h.id)){ curRecords().push(h); added++; } });
       saveState(true); renderApp();
-      // 一併還原備份裡的照片
       let pn=0;
       if(Array.isArray(parsed.photos)){
         Promise.all(parsed.photos.map(p=>(p&&p.id&&p.dataUrl)?photoPut(p).then(()=>pn++).catch(()=>{}):null))
@@ -1215,7 +1374,14 @@ function showToast(msg){
 /* =========================================================
    APP SHELL
 ========================================================= */
+function updateModeUI(){
+  const c=cfg();
+  document.getElementById('appTitle').textContent=c.icon+' '+c.appTitle;
+  document.querySelectorAll('.mode-btn').forEach(b=>{ b.classList.toggle('active', b.dataset.mode===state.mode); });
+}
+
 function renderApp(){
+  updateModeUI();
   const main=document.getElementById('main');
   main.innerHTML='';
   let content;
@@ -1235,21 +1401,28 @@ function renderApp(){
 document.querySelectorAll('.navbtn').forEach(b=>{
   b.addEventListener('click',()=>{ state.view=b.dataset.view; state.editingId=null; renderApp(); });
 });
+document.querySelectorAll('.mode-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    if(state.mode===b.dataset.mode) return;
+    state.mode=b.dataset.mode; state.view='list'; state.editingId=null; state.search=''; state.filterStatus='';
+    saveState(true); renderApp();
+  });
+});
 document.getElementById('fabAdd').addEventListener('click',()=>{
-  const h=newHouse(); state.houses.push(h); saveState(true);
-  state.editingId=h.id; state.view='edit'; renderApp();
+  const r=newRecord(); curRecords().push(r); saveState(true);
+  state.editingId=r.id; state.view='edit'; renderApp();
 });
 document.getElementById('btnMenu').addEventListener('click',openMenu);
-
-loadState();
-renderApp();
 
 /* =========================================================
    紙本列印表格
    空白版：現場手寫用；已填版：把某筆紀錄印出來
 ========================================================= */
-const PRINT_ESSENTIAL=['s2','s3','s4','s5','s8','s9','s10','s11','s17','s19'];
-let printOpts={mode:'blank',houseId:null,sections:SECTIONS.map(s=>s.id)};
+const PRINT_ESSENTIAL={
+  tenant:['s2','s3','s4','s5','s8','s9','s10','s11','s17','s19'],
+  landlord:['l1','l2','l3','l4','l5'],
+};
+let printOpts={mode:'blank',houseId:null,sections:[]};
 
 function pfText(v){
   if(v===undefined||v===null||v==='') return '';
@@ -1318,31 +1491,33 @@ function printFieldHTML(f,d){
 
 function buildPrintHTML(){
   const house=printOpts.mode==='filled'
-    ? state.houses.find(h=>h.id===printOpts.houseId) : null;
+    ? curRecords().find(h=>h.id===printOpts.houseId) : null;
   const d=house?house.data:null;
   const hf=(lab,val)=>`<span class="pf-hf"><b>${lab}</b><span class="pf-hl">${val||''}</span></span>`;
 
+  const c=cfg();
+  // 表頭欄位依模式不同：房客看物件、房東看租客
+  const HEAD_ROWS = state.mode==='landlord'
+    ? [[['姓名','nickname'],['聯繫日期','viewDate'],['時間','viewTime']],
+       [['電話','contactPhone'],['LINE','contactLine']],
+       [['職業','occupation'],['公司／學校','company']]]
+    : [[['物件','nickname'],['看房日期','viewDate'],['時間','viewTime']],
+       [['地址','address']],
+       [['聯絡人','contactName'],['電話','contactPhone']]];
   let html='<div class="pf-wrap"><div class="pf-head">'+
-    '<div class="pf-title">🏠 看房紀錄表</div>'+
-    `<div class="pf-sub">${house?'已填紀錄':'現場手寫用'}　·　逐項確認，避免看完就忘</div>`+
-    '<div class="pf-hrow">'+
-      hf('物件',d?pfText(d.nickname):'')+
-      hf('看房日期',d?pfText(d.viewDate):'')+
-      hf('時間',d?pfText(d.viewTime):'')+
-    '</div><div class="pf-hrow">'+
-      hf('地址',d?pfText(d.address):'')+
-    '</div><div class="pf-hrow">'+
-      hf('聯絡人',d?pfText(d.contactName):'')+
-      hf('電話',d?pfText(d.contactPhone):'')+
-    '</div></div>';
+    `<div class="pf-title">${c.icon} ${escapeHtml(c.appTitle)}表</div>`+
+    `<div class="pf-sub">${house?'已填紀錄':'現場手寫用'}　·　逐項確認，避免當場漏問</div>`+
+    HEAD_ROWS.map(row=>'<div class="pf-hrow">'+
+      row.map(([lab,key])=>hf(lab,d?pfText(d[key]):'')).join('')+'</div>').join('')+
+    '</div>';
 
-  SECTIONS.filter(s=>printOpts.sections.includes(s.id)).forEach(sec=>{
+  cfg().sections.filter(s=>printOpts.sections.includes(s.id)).forEach(sec=>{
     html+=`<div class="pf-sec"><div class="pf-sech">${escapeHtml(sec.title)}</div><div class="pf-body">`;
     sec.fields.forEach(f=>{ html+=printFieldHTML(f,d); });
     html+='</div></div>';
   });
 
-  html+='<div class="pf-foot"><span>看房紀錄 App</span><span>簽名／備註：____________________</span></div></div>';
+  html+='<div class="pf-foot"><span>'+escapeHtml(cfg().appTitle)+'</span><span>簽名／備註：____________________</span></div></div>';
   return html;
 }
 
@@ -1368,8 +1543,13 @@ function openPrintDialog(){
   bd.addEventListener('click',e=>{ if(e.target===bd) bd.remove(); });
   const sheet=document.createElement('div'); sheet.className='modal-sheet'; sheet.style.position='relative';
 
+  // 換模式時分區完全不同，每次開啟都以目前模式重設
+  const validIds=cfg().sections.map(s=>s.id);
+  if(!printOpts.sections.length||!printOpts.sections.every(id=>validIds.includes(id)))
+    printOpts.sections=validIds.slice();
+
   // 從編輯畫面進來就預設印這一筆
-  const editing=state.editingId?state.houses.find(h=>h.id===state.editingId):null;
+  const editing=state.editingId?curRecords().find(h=>h.id===state.editingId):null;
   if(editing){ printOpts.mode='filled'; printOpts.houseId=editing.id; }
   else { printOpts.mode='blank'; printOpts.houseId=null; }
 
@@ -1400,7 +1580,7 @@ function openPrintDialog(){
     </div>`;
 
   const secBox=sheet.querySelector('#pSecs');
-  SECTIONS.forEach(s=>{
+  cfg().sections.forEach(s=>{
     const row=document.createElement('div');
     row.className='checklist-item'+(printOpts.sections.includes(s.id)?' on':'');
     row.innerHTML=`<span class="box">✓</span><span>${escapeHtml(s.title)}</span>`;
@@ -1414,7 +1594,7 @@ function openPrintDialog(){
   });
 
   const houseSel=sheet.querySelector('#pHouse');
-  state.houses.forEach(h=>{
+  curRecords().forEach(h=>{
     const o=document.createElement('option');
     o.value=h.id; o.textContent=h.data.nickname||'（未命名物件）';
     houseSel.appendChild(o);
@@ -1427,23 +1607,23 @@ function openPrintDialog(){
       c.classList.toggle('on',c.dataset.m===printOpts.mode));
     sheet.querySelector('#pHouseWrap').style.display=(printOpts.mode==='filled')?'':'none';
     secBox.querySelectorAll('.checklist-item').forEach((row,i)=>
-      row.classList.toggle('on',printOpts.sections.includes(SECTIONS[i].id)));
+      row.classList.toggle('on',printOpts.sections.includes(cfg().sections[i].id)));
     const n=printOpts.sections.length;
     const pages=n?estimatePages():0;
     sheet.querySelector('#pCount').textContent=
-      n?`包含分區（已選 ${n}/${SECTIONS.length}　約 ${pages} 頁）`:'包含分區（請至少選一區）';
+      n?`包含分區（已選 ${n}/${cfg().sections.length}　約 ${pages} 頁）`:'包含分區（請至少選一區）';
     sheet.querySelector('#pGo').disabled=!n;
     sheet.querySelector('#pGo').style.opacity=n?'1':'.5';
   }
 
   sheet.querySelectorAll('#pMode .chip').forEach(c=>c.addEventListener('click',()=>{
-    if(c.dataset.m==='filled'&&state.houses.length===0){ showToast('還沒有任何紀錄可以印'); return; }
+    if(c.dataset.m==='filled'&&curRecords().length===0){ showToast('還沒有任何紀錄可以印'); return; }
     printOpts.mode=c.dataset.m;
     if(printOpts.mode==='filled'&&!printOpts.houseId) printOpts.houseId=houseSel.value;
     refresh();
   }));
-  sheet.querySelector('#pAll').addEventListener('click',()=>{ printOpts.sections=SECTIONS.map(s=>s.id); refresh(); });
-  sheet.querySelector('#pEss').addEventListener('click',()=>{ printOpts.sections=PRINT_ESSENTIAL.slice(); refresh(); });
+  sheet.querySelector('#pAll').addEventListener('click',()=>{ printOpts.sections=cfg().sections.map(s=>s.id); refresh(); });
+  sheet.querySelector('#pEss').addEventListener('click',()=>{ printOpts.sections=(PRINT_ESSENTIAL[state.mode]||[]).slice(); refresh(); });
   sheet.querySelector('#pNone').addEventListener('click',()=>{ printOpts.sections=[]; refresh(); });
   sheet.querySelector('.modal-close').addEventListener('click',()=>bd.remove());
   sheet.querySelector('#pGo').addEventListener('click',()=>{
@@ -2005,7 +2185,8 @@ function renderPhotoBox(house){
   const mk=(txt,fn)=>{ const b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=txt; b.addEventListener('click',fn); row.appendChild(b); return b; };
   mk('📸 拍照',()=>pickPhoto(house,true));
   mk('🖼️ 從相簿選',()=>pickPhoto(house,false));
-  mk('⬇️ 匯入 591 照片',()=>import591Photos(house));
+  // 591 照片只有房客模式用得到，篩選租客沒有物件可匯入
+  if(state.mode==='tenant') mk('⬇️ 匯入 591 照片',()=>import591Photos(house));
   body.appendChild(row);
 
   const grid=document.createElement('div'); grid.id='photoGrid'; grid.className='photo-grid';
@@ -2104,6 +2285,9 @@ function openPhotoViewer(list,idx){
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 }
+
+loadState();
+renderApp();
 </script>
 </body>
 </html>
