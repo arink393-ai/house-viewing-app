@@ -1721,10 +1721,17 @@ function escapeAttr(s){ return escapeHtml(s); }
 const KANFANGQU_URL='https://arink393-ai.github.io/kanfangqu/';
 const KANFANGQU_DEFECT_FLAGS=['漏水／壁癌','明顯霉味','排水有問題','水壓過弱','冷氣老舊','家電無法正常使用'];
 
-function kfqRoadFromAddress(addr){
+function kfqRoadFromAddress(house){
+  const d=house.data;
+  let addr=String(d.address||'');
   if(!addr) return '';
-  const m=String(addr).match(/([一-龥]{1,8}(?:路|街|大道))(?:\s*([一二兩三四五六七八九十]+段|\d+段))?/);
+  if(d.city) addr=addr.split(d.city).pop();
+  if(d.district) addr=addr.split(d.district).pop();
+  const m=addr.match(/([一-龥]{1,8}(?:路|街|大道))(?:\s*([一二兩三四五六七八九十]+段|\d+段))?/);
   return m ? (m[1]+(m[2]||'')) : '';
+}
+function kfqCityName(city){
+  return String(city||'').replace(/臺/g,'台');
 }
 function kfqRating(house){
   const d=house.data;
@@ -1777,9 +1784,9 @@ function shareToKanfangqu(house){
   const d=house.data;
   const draft={
     title:(d.nickname||'').slice(0,40),
-    city:d.city||'',
+    city:kfqCityName(d.city),
     district:d.district||'',
-    road:kfqRoadFromAddress(d.address),
+    road:kfqRoadFromAddress(house),
     tags:kfqTags(house),
     rating:kfqRating(house),
     summary:kfqSummary(house),
