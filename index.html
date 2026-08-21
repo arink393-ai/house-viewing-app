@@ -1474,7 +1474,7 @@ function renderEdit(){
     renderNegoPanel(negoBox,house);
 
     const quick=document.createElement('div'); quick.className='chip-row quick-actions'; quick.style.marginBottom='12px';
-    [['📋 從 591 匯入',()=>open591Dialog(house)],['📍 查附近交通',()=>openTransitLookup(house)]]
+    [['📋 從 591 匯入',()=>open591Dialog(house)],['📍 查附近交通',()=>openTransitLookup(house)],['🚩 分享到看房趣',()=>shareToKanfangqu(house)]]
       .forEach(([txt,fn])=>{
         const b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=txt;
         b.addEventListener('click',fn); quick.appendChild(b);
@@ -1711,6 +1711,85 @@ document.getElementById('fileImport').addEventListener('change',e=>{
 ========================================================= */
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function escapeAttr(s){ return escapeHtml(s); }
+
+/* =========================================================
+   橋接：分享到「看房趣」(kanfangqu)
+   把一筆看房紀錄整理成故事草稿，帶到看房趣網站開啟發文視窗。
+   看房趣那邊已經有讀取 ?draft= 參數的邏輯（讀完立刻清掉網址列，
+   不會留在瀏覽紀錄裡），這裡只需要組出對應欄位即可。
+========================================================= */
+const KANFANGQU_URL='https://arink393-ai.github.io/kanfangqu/';
+const KANFANGQU_DEFECT_FLAGS=['漏水／壁癌','明顯霉味','排水有問題','水壓過弱','冷氣老舊','家電無法正常使用'];
+
+function kfqRoadFromAddress(addr){
+  if(!addr) return '';
+  const m=String(addr).match(/([一-龥]{1,8}(?:路|街|大道))(?:\s*([一二兩三四五六七八九十]+段|\d+段))?/);
+  return m ? (m[1]+(m[2]||'')) : '';
+}
+function kfqRating(house){
+  const d=house.data;
+  if(d.scoreLandlord) return d.scoreLandlord;
+  const map={'放心':5,'普通':3,'有點怪':2,'不舒服':1};
+  return map[d.gutFeeling]||0;
+}
+function kfqTags(house){
+  const d=house.data, tags=new Set();
+  const rb=Array.isArray(d.redFlagBehavior)?d.redFlagBehavior:[];
+  const rf=Array.isArray(d.redFlags)?d.redFlags:[];
+  if(rb.includes('施壓立即簽約')) tags.add('用話術施壓成交');
+  if(rb.includes('前後說法不一致')) tags.add('口頭承諾但反悔');
+  if(rf.some(x=>KANFANGQU_DEFECT_FLAGS.includes(x))) tags.add('隱瞞房屋瑕疵');
+  if(rf.includes('催促當場匯訂金')) tags.add('用話術施壓成交');
+  if(rf.includes('租金與刊登不一致')) tags.add('臨時調漲租金或條件');
+  if(rf.includes('要求不合理高額違約金')) tags.add('用話術施壓成交');
+  if(rf.includes('修繕責任全部推給房客')) tags.add('拖延/不處理修繕');
+  return Array.from(tags);
+}
+function kfqSummary(house){
+  const d=house.data, bits=[];
+  if(d.redFlags && d.redFlags.length) bits.push('看房時發現：'+d.redFlags.slice(0,3).join('、'));
+  if(d.gutFeeling) bits.push('整體直覺：'+d.gutFeeling);
+  let s=bits.join('；');
+  return s.length>150 ? s.slice(0,148)+'…' : s;
+}
+function kfqNarrative(house){
+  const d=house.data, lines=[];
+  if(d.viewDate) lines.push('看房日期：'+d.viewDate);
+  if(d.rent) lines.push('刊登租金：$'+d.rent+(d.mgmtFee?'（另＋管理費 $'+d.mgmtFee+'）':''));
+  if(d.contactRole) lines.push('接待身分：'+d.contactRole);
+  if(Array.isArray(d.impressionTags) && d.impressionTags.length) lines.push('對方給人的感覺：'+d.impressionTags.join('、'));
+  if(Array.isArray(d.redFlagBehavior) && d.redFlagBehavior.length) lines.push('現場出現的狀況：'+d.redFlagBehavior.join('、'));
+  if(Array.isArray(d.redFlags) && d.redFlags.length) lines.push('紅旗警訊：'+d.redFlags.join('、'));
+  if(d.gutFeeling) lines.push('看完的直覺感受：'+d.gutFeeling);
+  if(d.dailyBother && d.dailyBother!=='無特別困擾') lines.push('住進去可能每天困擾我的：'+d.dailyBother);
+  lines.push('','（以上內容從「看房紀錄APP」自動帶入，請補充完整經過後再發佈。）');
+  return lines.join('\n');
+}
+function kfqContact(house){
+  const d=house.data, parts=[];
+  if(d.url) parts.push(d.url);
+  if(d.contactName) parts.push('聯絡人：'+d.contactName);
+  if(d.contactPhone) parts.push('電話：'+d.contactPhone);
+  if(d.contactLine) parts.push('LINE：'+d.contactLine);
+  return parts.join('\n');
+}
+function shareToKanfangqu(house){
+  const d=house.data;
+  const draft={
+    title:(d.nickname||'').slice(0,40),
+    city:d.city||'',
+    district:d.district||'',
+    road:kfqRoadFromAddress(d.address),
+    tags:kfqTags(house),
+    rating:kfqRating(house),
+    summary:kfqSummary(house),
+    narrative:kfqNarrative(house),
+    landlord591:kfqContact(house)
+  };
+  const url=KANFANGQU_URL+'?draft='+encodeURIComponent(JSON.stringify(draft));
+  showToast('正在開啟看房趣，請確認內容後再發佈');
+  window.open(url,'_blank','noopener');
+}
 let toastTimer=null;
 function showToast(msg){
   const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
